@@ -1,0 +1,27 @@
+global proc exprespy_code_new(string $plug)
+{
+    python("import exprespy; exprespy.ae_code_new('"+ match("[^.]+", $plug) +"')");
+}
+
+global proc exprespy_code_replace(string $plug)
+{
+    python("import exprespy; exprespy.ae_code_replace('"+ match("[^.]+", $plug) +"')");
+}
+
+global proc AEexprespyTemplate(string $nodename)
+{
+    editorTemplate("-beginScrollLayout");
+
+    editorTemplate("-beginLayout","Python Expression Code", "-collapse",0);
+        editorTemplate("-callCustom","exprespy_code_new","exprespy_code_replace","code");
+    editorTemplate("-endLayout");
+
+    editorTemplate("-suppress","compiled");
+    editorTemplate("-suppress","inputs");
+    editorTemplate("-suppress","outputs");
+
+    AEdependNodeTemplate($nodename);
+
+    editorTemplate("-addExtraControls");
+    editorTemplate("-endScrollLayout");
+}
