@@ -28,7 +28,8 @@ Python ‚ÅƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“‚ð‘‚¯‚é‚æ‚¤‚É‚·‚éƒvƒ‰ƒOƒCƒ“‚Í
 [pyExpression](http://www.soup-dev.com/wiki/PyExpression.html)
 ƒm[ƒh‚ª—L–¼‚Å‚·B
 ‚µ‚©‚µA‚»‚ê‚Í‘S‚Ä Python ‚ÅŽÀ‘•‚³‚ê‚Ä‚¨‚èA
-Python ‚ÌƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“ƒR[ƒh‚Í exec() ŠÖ”‚É‚æ‚Á‚ÄŽÀs‚³‚ê‚éŽd‘g‚Ý‚È‚½‚ßAŽÀsŒø—¦‚Å‚Í—ò‚è‚Ü‚·B
+Python ‚ÌƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“ƒR[ƒh‚Í exec() ŠÖ”‚É‚æ‚Á‚ÄŽÀs‚³‚ê‚éŽd‘g‚Ý‚ÅA
+ŽÀs‚·‚é‚½‚Ñ‚ÉƒR[ƒh‚ðƒRƒ“ƒpƒCƒ‹‚·‚é‚½‚ßŒø—¦“I‚Å‚Í‚ ‚è‚Ü‚¹‚ñB
 
 ‚Ü‚½A•W€‚Å•t‘®‚·‚é MASH ‚É‚Í Python ƒm[ƒh‚ª‚ ‚èAPython ‚Åƒ‚[ƒVƒ‡ƒ“ƒOƒ‰ƒtƒBƒbƒNƒX‚ð§Œä‚·‚é‚±‚Æ‚ªo—ˆ‚Ü‚·B
 ‚½‚¾A‚»‚ê‚Í particle ƒf[ƒ^‚ð§Œä‚·‚éŽd‘g‚Ý‚ÅA‚»‚ê‚É“Á‰»‚³‚ê‚½«”\‚Í‘f°‚ç‚µ‚¢‚Å‚·‚ªA”Ä—p“I‚Å‚Í‚ ‚è‚Ü‚¹‚ñB
@@ -69,6 +70,13 @@ Python ‚ÌƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“ƒR[ƒh‚Í exec() ŠÖ”‚É‚æ‚Á‚ÄŽÀs‚³‚ê‚éŽd‘g‚Ý‚È‚½‚ßAŽ
   ```
 
 ‚»‚ÌŒãA¶¬‚³‚ê‚½ exprespy ƒm[ƒh‚ÌƒAƒgƒŠƒrƒ…[ƒgƒGƒfƒBƒ^‚ÉƒR[ƒh‚ð“ü—Í‚µ‚Ü‚·B
+
+
+##ƒTƒ“ƒvƒ‹ƒV[ƒ“
+* constraints.ma
+
+  —lX‚ÈƒRƒ“ƒXƒgƒŒƒCƒ“‹@”\‚ðƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“‚ÅŽÀ‘•‚µ‚½—áB
+  positionAorientAƒAƒbƒvƒIƒuƒWƒFƒNƒg–³‚µ‚Ì aimAƒAƒbƒvƒIƒuƒWƒFƒNƒg—L‚è‚Ì aim ‚ðŽÀ‘•‚µ‚Ä‚¢‚Ü‚·B
 
 
 ##Ú×Žd—l
