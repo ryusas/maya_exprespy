@@ -1,134 +1,142 @@
 # maya_exprespy
-Maya �� Python �ɂ��G�N�X�v���b�V�����@�\��񋟂���m�[�h�̃v���O�C���ł��B
-exprespy�i�G�N�X�v���X�p�C�j�ƌĂт܂��B
+Maya で Python によるエクスプレッション機能を提供するノードのプラグインです。
+exprespy（エクスプレスパイ）と呼びます。
 
 ![SS](/exprespy.png)
 
 
-##����
-�{�v���O�C���ł͑��x���d�����A�m�[�h�� C++ �Ŏ�������Ă��܂��B
-�܂��A����ɂ���āAPython �ɂ��G�N�X�v���b�V�����R�[�h�͈�x�����R���p�C�����ꃁ������ɕێ�����A
-�ȍ~�̓R���p�C���ς݂̃R�[�h�I�u�W�F�N�g�����s����d�g�݂��������Ă��܂��B
-�܂�A���s���̌������ǂ����̂ƂȂ��Ă��܂��B
+##特徴
+本プラグインでは速度を重視し、ノードは C++ で実装されています。
+また、それによって、Python によるエクスプレッションコードは一度だけコンパイルされメモリ上に保持され、
+以降はコンパイル済みのコードオブジェクトを実行する仕組みを実現しています。
+つまり、実行時の効率が良いものとなっています。
 
-�܂��A�W���̃G�N�X�v���b�V�����@�\�Ɠ��l�ɁA�G�f�B�^�i�A�g���r���[�g�G�f�B�^�j��ł́A
-���ۂ̃m�[�h�E�A�g���r���[�g���ł̃R�[�f�B���O���\�ł��B
-�����́A�W���@�\�Ɠ��l�ɁA���ۂ̓m�[�h�̃R�l�N�V�����ɒu����������悤�ɂȂ��Ă��܂��B
+また、標準のエクスプレッション機能と同様に、エディタ（アトリビュートエディタ）上では、
+実際のノード・アトリビュート名でのコーディングが可能です。
+それらは、標準機能と同様に、実際はノードのコネクションに置き換えられるようになっています。
 
-�������A�P�ʕϊ��̋@�\�͂Ȃ��A�����P�ʂŒ��ڈ����܂��B
-�������S�Ҍ����łȂ������ł����A����������d�����鏊�Ȃł��B
+ただし、単位変換の機能はなく、内部単位で直接扱われます。
+少し初心者向けでない部分ですが、これも効率重視たる所以です。
 
-����ɁAPython API 2.0 �̌^�ɑΉ����Adouble3 �� matrix �A�g���r���[�g�𒼐ړ��o�͂��邱�Ƃ��\�ł��B
+さらに、Python API 2.0 の型に対応し、double3 や matrix アトリビュートを直接入出力することが可能です。
 
 
-##�ގ��Z�p
-Python �ŃG�N�X�v���b�V������������悤�ɂ���v���O�C����
+##類似技術
+Python でエクスプレッションを書けるようにするプラグインは
 [SOuP](http://www.soup-dev.com/)
-�Ɋ܂܂��
+に含まれる
 [pyExpression](http://www.soup-dev.com/wiki/PyExpression.html)
-�m�[�h���L���ł��B
-�������A����͑S�� Python �Ŏ�������Ă���A
-Python �̃G�N�X�v���b�V�����R�[�h�� exec() �֐��ɂ���Ď��s�����d�g�݂ŁA
-���s���邽�тɃR�[�h���R���p�C�����邽�ߌ����I�ł͂���܂���B
+ノードが有名です。
+しかし、それは全て Python で実装されており、
+Python のエクスプレッションコードは exec() 関数によって実行される仕組みで、
+実行するたびにコードをコンパイルするため効率的ではありません。
 
-�܂��A�W���ŕt������ MASH �ɂ� Python �m�[�h������APython �Ń��[�V�����O���t�B�b�N�X�𐧌䂷�邱�Ƃ��o���܂��B
-�����A����� particle �f�[�^�𐧌䂷��d�g�݂ŁA����ɓ������ꂽ���\�͑f���炵���ł����A�ėp�I�ł͂���܂���B
-
-
-##�f�B���N�g���\��
-* examples: Maya�V�[���̗�B
-* plug-ins: �r���h�ς݃v���O�C���o�C�i���B
-* python: �T�|�[�g python ���W���[���B
-* scripts: �T�|�[�g mel �X�N���v�g�B
-* srcs: C++�\�[�X�R�[�h�B
+また、標準で付属する MASH には Python ノードがあり、Python でモーショングラフィックスを制御することが出来ます。
+ただ、それは particle データを制御する仕組みで、それに特化された性能は素晴らしいですが、汎用的ではありません。
 
 
-##�C���X�g�[�����@
-* plug-ins �t�H���_�ɂ���v���b�g�t�H�[���ƃo�[�W�������Ƃ̃t�H���_�Ɏ��߂��Ă���t�@�C����
-  MAYA_PLUG_IN_PATH �̒ʂ����t�H���_�ɃR�s�[����B
+##ディレクトリ構成
+* [examples](/examples): Mayaシーンの例。
+* [plug-ins](/plug-ins): ビルド済みプラグインバイナリ。
+* [python](/python): サポート python モジュール。
+* [scripts](/scripts): サポート mel スクリプト。
+* [srcs](/srcs): C++ソースコード。
 
-* python �t�H���_�ɂ���t�@�C���� PYTHONPATH �̒ʂ����t�H���_�ɃR�s�[����B
 
-* scripts �t�H���_�ɂ���t�@�C���� MAYA_SCRIPT_PATH �̒ʂ����t�H���_�ɃR�s�[����B
+##インストール方法
+* plug-ins フォルダにあるプラットフォームとバージョンごとのフォルダに収められているファイルを
+  MAYA_PLUG_IN_PATH の通ったフォルダにコピーする。
+
+* python フォルダにあるファイルを PYTHONPATH の通ったフォルダにコピーする。
+
+* scripts フォルダにあるファイルを MAYA_SCRIPT_PATH の通ったフォルダにコピーする。
 
 
-##�g�p���@
-�G�N�X�v���b�V�������L�q����ɂ́A�܂� exprespy �m�[�h�𐶐����܂��B
-�ȉ��̂ǂ��炩�̕��@�����p�ł��܂��B
+##使用方法
+エクスプレッションを記述するには、まず exprespy ノードを生成します。
+以下のどちらかの方法が利用できます。
 
-* �v���O�C�������[�h���Ă���A�ȉ��� mel �R�[�h�����s�B
+* プラグインをロードしてから、以下の mel コードを実行。
 
   ```
   createNode exprespy;
   ```
 
-* �ȉ��� python �R�[�h�����s�i�v���O�C���̓��[�h����Ă��Ȃ��Ă�OK�j�B
+* 以下の python コードを実行（プラグインはロードされていなくてもOK）。
 
   ```
   import exprespy
   exprespy.create()
   ```
 
-���̌�A�������ꂽ exprespy �m�[�h�̃A�g���r���[�g�G�f�B�^�ɃR�[�h����͂��܂��B
+その後、生成された exprespy ノードのアトリビュートエディタにコードを入力します。
 
 
-##�T���v���V�[��
-* constraints.ma
+##サンプルシーン
+* [constraints.ma](/examples/constraints.ma)
 
-  �l�X�ȃR���X�g���C���@�\���G�N�X�v���b�V�����Ŏ���������B
-  position�Aorient�A�A�b�v�I�u�W�F�N�g������ aim�A�A�b�v�I�u�W�F�N�g�L��� aim ���������Ă��܂��B
+  様々なコンストレイン機能をエクスプレッションで実装した例。
+  position、orient、アップオブジェクト無しの aim、アップオブジェクト有りの aim を実装しています。
 
 
-##�ڍ׎d�l
+##詳細仕様
 
-* ���̓A�g���r���[�g�̌^�͈ȉ��ɑΉ����Ă��܂��B
+* 内部単位での扱い
 
-  - �l�X�ȃX�J���[���l�^
+  単位付きアトリビュートは入出力とも内部単位で扱われます。
+  time は秒、
+  doubleLinear(distance) は centimeter 、
+  doubleAngle は radian
+  での扱いとなります。
 
-    Python ��ł� float �� int �ɂȂ�܂��iPython �ł� float �� double �̋�ʂ͂���܂���j�B
-    ���͐��l�^�̔��ʂ������ɂ͏o���Ȃ����� bool �� int �ɂȂ�܂��B
+* 入力アトリビュートの型は以下に対応しています。
 
-  - string �^
+  - 様々なスカラー数値型（double, float, time, doulbeLinear, doubleAngle, int, bool, enum 等）
 
-    Python ��ł� unicode �ɂȂ�܂��B
+    Python 上では float か int になります（Python では float と double の区別はありません）。
+    入力数値型の判別が厳密には出来ないため bool は int になります。
 
-  - double3 �^
+  - string 型
 
-    Python ��ł� API 2.0 �� MVector �ɂȂ�܂��B
-    ���̌�AMPoint �� MEulerRotation ���ɕϊ�����̂����R���݂ł��B
+    Python 上では unicode になります。
 
-  - matrix �^
+  - double3 型
 
-    Python ��ł� API 2.0 �� MMatrix �ɂȂ�܂��B
+    Python 上では API 2.0 の MVector になります。
+    その後、MPoint や MEulerRotation 等に変換するのも自由自在です。
 
-* �o�̓A�g���r���[�g�̌^�͈ȉ��ɑΉ����Ă��܂��B
+  - matrix 型
 
-  - �l�X�ȃX�J���[���l�^
+    Python 上では API 2.0 の MMatrix になります。
 
-    Python �̌^�ɉ����āA�ȉ��̂悤�ɃA�g���r���[�g�^�����܂�܂��B
+* 出力アトリビュートの型は以下に対応しています。
+
+  - 様々なスカラー数値型
+
+    Python の型に応じて、以下のようにアトリビュート型が決まります。
 
     - bool -> bool
     - int -> int
     - long int -> int
     - float -> double
 
-  - string �^
+  - string 型
 
-    Python ��� str �� unicode �� string �^�ɂȂ�܂��B
+    Python 上の str や unicode が string 型になります。
 
-  - double3 �^
+  - double3 型
 
-    Python ��� API 2.0 �� MVector, MPoint, MEulerRotation �� double3 �ɂȂ�܂��B
-    ���̂��� MPoint �� w �� MEulerRotation �� order �͂��̂܂܂��Ǝ̂Ă��܂��̂ŁA
-    �K�v�Ȃ�ʃA�g���r���[�g�ɏo���Ă��������B
+    Python 上の API 2.0 の MVector, MPoint, MEulerRotation が double3 になります。
+    そのため MPoint の w や MEulerRotation の order はそのままだと捨てられますので、
+    必要なら別アトリビュートに出してください。
 
-  - matrix �^
+  - matrix 型
 
-    Python ��� API 2.0 �� MMatrix �� matrix �^�ɂȂ�܂��B
+    Python 上の API 2.0 の MMatrix が matrix 型になります。
 
-* ���W���[��
+* モジュール
 
-  Python �G�N�X�v���b�V�����R�[�h�ł́A�ȉ��̃��W���[�����C���|�[�g�ς݂Ŏg�����ԂƂȂ��Ă��܂��B
+  Python エクスプレッションコードでは、以下のモジュールがインポート済みで使える状態となっています。
 
   ```
   import math
@@ -137,41 +145,56 @@ Python �̃G�N�X�v���b�V�����R�[�h�� exec() �֐��ɂ���Ď��s�����d�g�݂ŁA
   import maya.mel as mel
   ```
 
-  ���ɕK�v�ȃ��W���[��������Ύ��R�� import ���Ă�������
-  �i��ʓI�� import ���̕��ׂ͍��߂Ȃ̂ŁA�����s�P�ʂōs���̂͏������Ӂj�B
+  他に必要なモジュールがあれば自由に import してください
+  （一般的に import 文の負荷は高めなので、毎実行単位で行うのは少し注意）。
 
-* �X�R�[�v
+* スコープ
 
-  Python �G�N�X�v���b�V�����R�[�h�ł́AMaya Python �̃O���[�o���X�R�[�v��̖��O�ɎQ�Əo���܂��B
-  �������A�V���Ɏg�p�����ϐ��ȂǂŁAMaya �̃O���[�o���X�R�[�v�͉���܂���B
+  Python エクスプレッションコードでは、Maya Python のグローバルスコープ上の名前に参照出来ます。
+  ただし、新たに使用した変数などで、Maya のグローバルスコープは汚れません。
 
-  ���[�J���X�R�[�v�́A�R�[�h���ҏW����R���p�C�����������܂ŕێ�����܂��B
-  ����ɂ���āA�Ⴆ�΁A��Ԃ��L�����čŏ��̈�񂾂����s���鏈�����L�q�����肷�邱�Ƃ��\�ł��B
+  ローカルスコープは、コードが編集されコンパイルし直されるまで保持されます。
+  それによって、例えば、状態を記憶して最初の一回だけ実行する処理を記述したりすることも可能です。
 
-* �R�[�h�͂ǂ̂悤�ɕۑ������̂�
+* 入出力と依存関係
 
-  exprespy �m�[�h�� code �Ƃ��� string �A�g���r���[�g�ɕۑ�����܂��B
-  �R�[�h���̃A�g���r���[�g�Q�Ƃ� ```IN[index]``` �� ```OUT[index]``` �̂悤�ȃv���[�X�z���_�ɒu�������܂��B
-  ���ۂ̃A�g���r���[�g�́A�����ɑΉ����� input[] �� output[] �̃v���O�ɐڑ�����܂��B
+  入力として参照したアトリビュートは exprespy ノードの input[] アトリビュートに、
+  出力として参照した（ = で代入した）アトリビュートは output[] アトリビュートに接続されます。
+  それらの型は generic で、何を繋いでも unitConversion ノードは挟まりません（仕様で許可されている型しか繋がりません）。
 
-  �A�g���r���[�g�G�f�B�^��Ɍ����Ă���R�[�h�́A�v���[�X�z���_��u�����������̃R�[�h�ł��B
-  ���̏����� exprespy �� Python ���W���[�����s���Ă��܂��B
+  全ての出力は全ての入力に依存することになります。コード上の論理的な依存関係は関係ありません。
+  よって、シーン中の全ての処理を一つの exprespy ノードに書くのは良くありません。
+  こういった考え方や仕組みは標準の expression ノードと全く同じものです。
+
+* コードはどのように保存されるのか
+
+  コードは exprespy ノードの code という string アトリビュートに保存されます。
+  コード内のアトリビュート参照は ```IN[index]``` や ```OUT[index]``` のようなプレースホルダに置き換わります。
+  実際のアトリビュートは、それらに対応した input[] と output[] に接続されます。
+
+  アトリビュートエディタ上に見えているコードは、プレースホルダを置き換えた仮のコードです。
+  この処理は exprespy の Python モジュールが行っています。
+  
+  ``IN`` と ``OUT`` は python エクスプレッションコードでは dict となっています。
+  list ではない理由は、実際のマルチアトリビュートと同様に欠番のある疎な配列に対応するためです。
+  この仕様を理解していれば、エディタ上のコードに直接 ``IN`` や ``OUT`` と好きなインデクスを書いても構いません。
+  また、exprespy ノードを連結することも出来るでしょう。
 
 
-##��������
-* �R�[�h���ɏ������A�g���r���[�g�Q�Ƃ̓p�[�X����Ď��ۂ̃R�l�N�V�����ƂȂ�킯�ł����A
-  �R�[�h�̃R�����g�����ʂ��Ă��Ȃ����߁A
-  �R�����g���ɂ����ۂ̃v���O�Ƀ}�b�`���閼�O������ƃR�l�N�V�����ɒu���������Ă��܂��܂��B
-  ���s���ʂ����������Ȃ�킯�ł͂���܂��񂪁A�]�v�ȎQ�Ƃ������邽�߁A���ʂɂ͂Ȃ�܂��B
+##制限事項
+* コード内に書いたアトリビュート参照はパースされて実際のコネクションとなるわけですが、
+  コードのコメントを識別していないため、
+  コメント中にも実際のプラグにマッチする名前があるとコネクションに置き換えられてしまいます。
+  実行結果がおかしくなるわけではありませんが、余計な参照が増えるため、無駄にはなります。
 
-* GUI�i�A�g���r���[�g�G�f�B�^�j�́A���܂�C������ď����Ă��Ȃ����߁A���ɂ������ȋ��������邩���m��܂���B
+* GUI（アトリビュートエディタ）は、あまり気合入れて書いていないため、時におかしな挙動をするかも知れません。
 
-* �d�l�ɏ������A�g���r���[�g�̓��o�͂ɂ����Ή����Ă��܂��񂪁A
-  �����I�ɂ� mesh�AnurbsCurve�AnurbsSurface ���̓��o�͂��\�ɂ������ƍl���Ă͂��܂��B
-  �����A������x�������̂ŁA�܂��͔�Ή��ł��B
-  �i�f�[�^�I�u�W�F�N�g�� C++ API ���� Python API �ւ̌����I�ɕϊ������@���v�����Ȃ��c�j
+* 仕様に書いたアトリビュートの入出力にしか対応していませんが、
+  将来的には mesh、nurbsCurve、nurbsSurface 等の入出力も可能にしたいと考えてはいます。
+  ただ、実装難度が高いので、まずは非対応です。
+  （データオブジェクトを C++ API から Python API への効率的に変換する手法が思いつかない…）
 
 
-##��������
-* 2016.10.2: ����
+##改訂履歴
+* 2016.10.2: 初版
 
