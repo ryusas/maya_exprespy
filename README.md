@@ -47,7 +47,7 @@ Python のエクスプレッションコードは exec() 関数によって実�
 ##インストール方法
 * plug-ins フォルダにあるプラットフォームとバージョンごとのフォルダに収められているファイルを
   MAYA_PLUG_IN_PATH の通ったフォルダにコピーします。
-  (My Documents)\maya\(version)\plug-ins でも OK です。
+  (My Documents)\maya\\(version)\plug-ins でも OK です。
 
 * python フォルダにあるファイルを PYTHONPATH の通ったフォルダにコピーします。
   (My Documents)\maya\scripts でも OK です。
@@ -56,7 +56,7 @@ Python のエクスプレッションコードは exec() 関数によって実�
   (My Documents)\maya\scripts でも OK です。
 
 * viewTemplates フォルダにあるファイルを MAYA_CUSTOM_TEMPLATE_PATH の通ったフォルダにコピーします。
-  設定されていなければ (My Documents)\maya\(version)\prefs\viewTemplates で OK です。
+  設定されていなければ (My Documents)\maya\\(version)\prefs\viewTemplates で OK です。
 
 
 ##使用方法
