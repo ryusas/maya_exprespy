@@ -188,6 +188,7 @@ MStatus Exprespy::initialize()
     aCompiled = fnNumeric.create("compile", "cm", MFnNumericData::kBoolean, false);
     fnNumeric.setWritable(false);
     fnNumeric.setStorable(false);
+    fnNumeric.setHidden(true);
     CHECK_MSTATUS_AND_RETURN_IT( addAttribute(aCompiled) );
 
     // input
@@ -574,7 +575,7 @@ void Exprespy::_setInputMatrix(int key, MObject& data)
 //=============================================================================
 MStatus initializePlugin(MObject obj)
 { 
-    static const char* VERSION = "1.0.20161002";
+    static const char* VERSION = "1.0.1.20161005";
     static const char* VENDER  = "Ryusuke Sasaki";
 
     MFnPlugin plugin(obj, VENDER, VERSION, "Any");

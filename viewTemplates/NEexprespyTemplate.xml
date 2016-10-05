@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<templates>
+	<using package='maya'/>
+	<template name='NEexprespy'>
+		<attribute name='output' type='maya.TdataNumeric'>
+			<label>Output</label>
+		</attribute>
+		<attribute name='input' type='maya.TdataNumeric'>
+			<label>Input</label>
+		</attribute>
+	</template>
+	<view name='NEDefault' template='NEexprespy'>
+		<property name='output'/>
+		<property name='input'/>
+	</view>
+</templates>

@@ -27,28 +27,41 @@ def setCode(node, code):
     u"""
     exprespy ノードにコード文字列をセットする。
     """
-    newcode, input, output = _toRawCode(code)
+    unknownIn = _getInputDict(node)
+    unknownOut = _getOutputDict(node)
+    rawcode = cmds.getAttr(node + '.cd') or ''
+    knownIn, knownOut = _analyzeRawCode(rawcode, unknownIn, unknownOut)
 
-    outUpdated = _updateOutputConnections(node, output, noConn=True)
-    if newcode == cmds.getAttr(node + '.cd'):
-        if not(_updateInputConnections(node, input) or outUpdated):
+    newcode, newIn, newOut = _toRawCode(code, unknownIn, unknownOut)
+
+    #print('unknownIn=' + repr(unknownIn.keys()))
+    #print('unknownOut=' + repr(unknownOut.keys()))
+    #print('knownIn=' + repr(knownIn.keys()))
+    #print('knownOut=' + repr(knownOut.keys()))
+    #print('newIn=' + repr(newIn.keys()))
+    #print('newOut=' + repr(newOut.keys()))
+
+    outUpdated = _updateOutputs(node, newOut, knownOut, unknownOut)
+    if newcode == rawcode:
+        if not(_updateInputs(node, newIn, knownIn, unknownIn) or outUpdated or newOut):
             cmds.setAttr(node + '.cd', newcode, type='string')
     else:
         cmds.setAttr(node + '.cd', '', type='string')
-        _updateInputConnections(node, input)
+        _updateInputs(node, newIn, knownIn, unknownIn)
         cmds.setAttr(node + '.cd', newcode, type='string')
-    if outUpdated:
-        _connectOutputs(node, output)
+    if newOut:
+        _connectOutputs(node, newOut)
 
 
 def getCode(node):
     u"""
     exprespy ノードからコード文字列を得る。
     """
-    input = _getInputDict(node)
-    output = _getOutputDict(node)
-    code = cmds.getAttr(node + '.cd') or ''
-    return _toHumanCode(code, input, output)
+    return _toHumanCode(
+        cmds.getAttr(node + '.cd') or '',
+        _getInputDict(node),
+        _getOutputDict(node),
+    )
 
 
 #------------------------------------------------------------------------------
@@ -87,21 +100,24 @@ def _ae_codeChange(ctl, node, *args):
 
 
 #------------------------------------------------------------------------------
-def _appendToList(lst, item):
-    try:
-        idx = lst.index(item)
-    except ValueError:
-        idx = len(lst)
-        lst.append(item)
+def _decideConnIndex(revDict, plug, unknownSet, lastIdx):
+    idx = revDict.get(plug)
+    if idx is None:
+        idx = lastIdx + 1
+        while idx in unknownSet:
+            idx += 1
+        revDict[plug] = idx
     return idx
 
 
-def _toRawCode(code, short=False):
+def _toRawCode(code, unknownInSet, unknownOutSet, short=False):
     u"""
-    ユーザーコードをアトリビュート用コードに変換する。
+    ユーザーコードを生コードに変換する。
     """
-    input = []
-    output = []
+    inputIdxDict = {}
+    outputIdxDict = {}
+    inIdx = -1
+    outIdx = -1
     newcode = []
     ptr = 0
     for mat in _RE_PLUG.finditer(code):
@@ -114,19 +130,48 @@ def _toRawCode(code, short=False):
             s, e = mat.span(1)
             newcode.append(code[ptr:s])
             if eq:
-                newcode.append('OUT[%d]' % _appendToList(output, name))
+                outIdx = _decideConnIndex(outputIdxDict, name, unknownOutSet, outIdx)
+                newcode.append('OUT[%d]' % outIdx)
             else:
-                newcode.append('IN[%d]' % _appendToList(input, name))
+                inIdx = _decideConnIndex(inputIdxDict, name, unknownInSet, inIdx)
+                newcode.append('IN[%d]' % inIdx)
             ptr = e
     newcode.append(code[ptr:])
-    input = dict([(i, v) for i, v in enumerate(input)])
-    output = dict([(i, v) for i, v in enumerate(output)])
-    return ''.join(newcode), input, output
+    return (
+        ''.join(newcode),
+        dict([(i, v) for v, i in inputIdxDict.items()]),
+        dict([(i, v) for v, i in outputIdxDict.items()]),
+    )
+
+
+def _analyzeRawCode(code, input, output):
+    u"""
+    生コードを分析し、管理されたコネクションとそうでないものとに分類する。
+
+    input と output 辞書から管理されたものが取り出され、
+    残りが管理されていないものになる。
+    """
+    knownIn = {}
+    knownOut = {}
+    for mat in _RE_IO_PLUG.finditer(code):
+        name, idx = mat.groups()
+        idx = int(idx)
+        if name == 'IN':
+            plug = input.pop(idx, None)
+            if plug:
+                knownIn[idx] = plug
+        else:
+            # 出力先が複数の場合は unknown 扱いとする。
+            plug = output.get(idx)
+            if plug and not isinstance(plug, list):
+                del output[idx]
+                knownOut[idx] = plug
+    return knownIn, knownOut
 
 
 def _toHumanCode(code, input, output):
     u"""
-    アトリビュート用コードをユーザーコードに変換する。
+    生コードをユーザーコードに変換する。
     """
     newcode = []
     ptr = 0
@@ -135,13 +180,17 @@ def _toHumanCode(code, input, output):
         idx = int(idx)
         if name == 'IN':
             plug = input.get(idx)
+            if not plug:
+                continue
         else:
+            # 出力先が複数の場合は unknown 扱いとする。
             plug = output.get(idx)
-        if plug:
-            s, e = mat.span(0)
-            newcode.append(code[ptr:s])
-            newcode.append(plug)
-            ptr = e
+            if not plug or isinstance(plug, list):
+                continue
+        s, e = mat.span(0)
+        newcode.append(code[ptr:s])
+        newcode.append(plug)
+        ptr = e
     newcode.append(code[ptr:])
     return ''.join(newcode)
 
@@ -164,59 +213,130 @@ def _getOutputDict(node):
     res = {}
     conn = cmds.listConnections(node + '.o', s=False, d=True, c=True, p=True) or []
     for src, dst in zip(conn[::2], conn[1::2]):
-        res[int(_RE_PLUG_INDEX.search(src).group(1))] = dst
+        idx = int(_RE_PLUG_INDEX.search(src).group(1))
+        other = res.get(idx)
+        if other:
+            if isinstance(other, list):
+                other.append(dst)
+            else:
+                res[idx] = [other, dst]
+        else:
+            res[idx] = dst
     return res
 
 
-def _updateInputConnections(node, input):
+def _updateInputs(node, newDict, knownDict, unknownDict):
     u"""
     入力コネクションを更新する。
+
+    newDict はチェック処理に使われるため、その内容は維持されない。
     """
+    # まず、変化がないかどうかを簡易的に判断する。
     attrs = cmds.listAttr(node + '.i', m=True) or []
-    if len(attrs) == len(input) and _getInputDict(node) == input:
+    n = len(attrs) - len(unknownDict)
+    if n == len(knownDict) and n == len(newDict) and knownDict == newDict:
+        #print('NOT_UPDATED: %s.inputs[]' % node)
         return False
 
+    # 既存のプラグをチェックしていく。
+    updated = False
     node_ = node + '.'
     for attr in attrs:
-        cmds.removeMultiInstance(node_ + attr, b=True)
+        idx = int(_RE_PLUG_INDEX.search(attr).group(1))
 
-    fmt = node + '.i[%d]'
-    for i, src in input.items():
-        cmds.connectAttr(src, fmt % i, f=True)
+        # 知らないコネクションなら維持する。
+        if idx in unknownDict:
+            #print('KEEP: ' + node_ + attr)
+            continue
 
-    return True
+        # 今後必要になるコネクションか？
+        plug = node_ + attr
+        tgt = newDict.pop(idx, None)
+        if tgt:
+            # 既に同じコネクションが在ればそのまま維持。
+            if tgt == knownDict.get(idx):
+                #print('NOT_CHANGED: ' + plug)
+                continue
+
+            # 古いコネクションが在れば、そのまま新規に接続し直す。
+            #print('CONNECT: %s -> %s' % (tgt, plug))
+            cmds.connectAttr(tgt, plug, f=True)
+            updated = True
+
+        # 不要なプラグなら削除。
+        else:
+            #print('REMOVE: ' + plug)
+            cmds.removeMultiInstance(plug, b=True)
+            updated = True
+
+    # 未処理のプラグを全てコネクトする。
+    if newDict:
+        fmt = node + '.i[%d]'
+        for i, tgt in newDict.items():
+            #print('NEW_CONNECT: %s -> %s' % (tgt, fmt % i))
+            cmds.connectAttr(tgt, fmt % i, f=True)
+        return True
+    return updated 
 
 
-def _updateOutputConnections(node, output, noConn=False):
+def _updateOutputs(node, newDict, knownDict, unknownDict):
     u"""
     出力コネクションを更新する。
+
+    既存の不要なプラグの切断や削除までが行われ、
+    コネクションの新規作成は行われない。
+    後で newDict に残されたものを `_connectOutputs` で接続する。
+
+    :returns: 何らかの編集が行われたかどうか。
     """
-    curoutput = _getOutputDict(node)
+    # まず、変化がないかどうかを簡易的に判断する。
     attrs = cmds.listAttr(node + '.o', m=True) or []
-    if len(attrs) == len(output) and curoutput == output:
+    n = len(attrs) - len(unknownDict)
+    if n == len(knownDict) and n == len(newDict) and knownDict == newDict:
+        #print('NOT_UPDATED: %s.outputs[]' % node)
+        newDict.clear()
         return False
 
+    # 既存のプラグをチェックしていく。
+    updated = False
     node_ = node + '.'
     for attr in attrs:
-        cmds.removeMultiInstance(node_ + attr, b=True)
-        #dst = curoutput.get(int(_RE_PLUG_INDEX.search(attr).group(1)))
-        #src = node_ + attr
-        #if dst:
-        #    print(src, dst, cmds.getAttr(dst))
-        #    cmds.disconnectAttr(src, dst)
-        #cmds.removeMultiInstance(src)
+        idx = int(_RE_PLUG_INDEX.search(attr).group(1))
 
-    if not noConn:
-        _connectOutputs(node, output)
+        # 知らないコネクションなら維持する。
+        if idx in unknownDict:
+            #print('KEEP: ' + node_ + attr)
+            continue
 
-    return True
+        # 今後必要になるコネクションか？
+        plug = node_ + attr
+        tgt = newDict.get(idx)
+        if tgt:
+            # 既に同じコネクションが在ればそのまま維持。
+            oldtgt = knownDict.get(idx)
+            if tgt == oldtgt:
+                #print('NOT_CHANGED: ' + plug)
+                del newDict[idx]
+                continue
+            # 古いコネクションなら切断する。
+            #print('DISCONNECT: %s -> %s' % (plug, oldtgt))
+            cmds.disconnectAttr(plug, oldtgt)
+            updated = True
+
+        # 不要なプラグなら削除。
+        else:
+            #print('REMOVE: ' + plug)
+            cmds.removeMultiInstance(plug, b=True)
+            updated = True
+    return updated
 
 
-def _connectOutputs(node, output):
+def _connectOutputs(node, newDict):
     u"""
-    先に全て削除済みの出力コネクションを再生成する。
+    出力コネクションを完了する。
     """
     fmt = node + '.o[%d]'
-    for i, dst in output.items():
-        cmds.connectAttr(fmt % i, dst, f=True)
+    for i, tgt in newDict.items():
+        #print('NEW_CONNECT: %s -> %s' % (fmt % i, tgt))
+        cmds.connectAttr(fmt % i, tgt, f=True)
 
