@@ -2,12 +2,13 @@
 u"""
 Support module for exprespy plug-in.
 """
+__version__ = '1.0.1.20161018'
 
 from functools import partial as _partial
 import re
 import maya.cmds as cmds
 
-_RE_PLUG = re.compile(r'(\w+(?:\.\w+(?:\[\d+\])?)+)(\s*\=)?')
+_RE_PLUG = re.compile(r'([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*(?:\[\d+\])?)+)(\s*\=)?')
 _RE_IO_PLUG = re.compile(r'(IN|OUT)\[(\d+)\]')
 _RE_PLUG_INDEX = re.compile(r'\[(\d+)\]$')
 
@@ -67,7 +68,9 @@ def getCode(node):
 #------------------------------------------------------------------------------
 def ae_code_new(node):
     #print('ae_code_new: ' + node)
-    cmds.uiTemplate()
+    if not cmds.uiTemplate('Exprespy', ex=True):
+        cmds.uiTemplate('Exprespy')
+    cmds.setUITemplate('Exprespy', pushTemplate=True)
     ctl = cmds.scrollField('codeEd', h=500)
     cmds.setUITemplate(popTemplate=True)
     cmds.scrollField(ctl, e=True, tx=getCode(node), cc=_partial(_ae_setCode, ctl, node))
@@ -130,11 +133,13 @@ def _toRawCode(code, unknownInSet, unknownOutSet, short=False):
             s, e = mat.span(1)
             newcode.append(code[ptr:s])
             if eq:
-                outIdx = _decideConnIndex(outputIdxDict, name, unknownOutSet, outIdx)
-                newcode.append('OUT[%d]' % outIdx)
+                i = _decideConnIndex(outputIdxDict, name, unknownOutSet, outIdx)
+                newcode.append('OUT[%d]' % i)
+                outIdx = max(i, outIdx)
             else:
-                inIdx = _decideConnIndex(inputIdxDict, name, unknownInSet, inIdx)
-                newcode.append('IN[%d]' % inIdx)
+                i = _decideConnIndex(inputIdxDict, name, unknownInSet, inIdx)
+                newcode.append('IN[%d]' % i)
+                inIdx = max(i, inIdx)
             ptr = e
     newcode.append(code[ptr:])
     return (

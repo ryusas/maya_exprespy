@@ -17,8 +17,8 @@ global proc AEexprespyTemplate(string $nodename)
     editorTemplate("-endLayout");
 
     editorTemplate("-suppress","compiled");
-    editorTemplate("-suppress","inputs");
-    editorTemplate("-suppress","outputs");
+    editorTemplate("-suppress","input");
+    editorTemplate("-suppress","output");
 
     AEdependNodeTemplate($nodename);
 
