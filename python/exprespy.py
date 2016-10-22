@@ -2,13 +2,13 @@
 u"""
 Support module for exprespy plug-in.
 """
-__version__ = '1.0.1.20161018'
+__version__ = '1.0.1.20161022'
 
 from functools import partial as _partial
 import re
 import maya.cmds as cmds
 
-_RE_PLUG = re.compile(r'([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*(?:\[\d+\])?)+)(\s*\=)?')
+_RE_PLUG = re.compile(r'([\|\:]?[a-zA-Z_]\w*(?:[\|\:][a-zA-Z_]\w*)*(?:\.[a-zA-Z_]\w*(?:\[\d+\])?)+)(\s*\=)?')
 _RE_IO_PLUG = re.compile(r'(IN|OUT)\[(\d+)\]')
 _RE_PLUG_INDEX = re.compile(r'\[(\d+)\]$')
 
