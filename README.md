@@ -20,6 +20,8 @@ exprespy（エクスプレスパイ）と呼びます。
 さらに、Python API 2.0 の型に対応し、double3 や matrix アトリビュートはもちろんのこと、
 ジオメトリデータなどあらゆるデータ型を直接入出力することが可能です。
 
+[制限事項](#limitation) をご一読の上ご利用ください。
+
 
 
 ##類似技術
@@ -162,6 +164,8 @@ Python のエクスプレッションコードは exec() 関数によって実�
 
   この程度の頂点数でもそれなりに重いので、やはり大量の頂点をリアルタイムに処理するのは
   Python API 2.0 でも厳しいようです。
+  やはり、メッシュデフォーメーション用途では、それに特化した taikomatsu 氏の
+  [SeExprMesh](https://github.com/taikomatsu/SeExprMeshMaya) 等の方が向いていると思います。
 
 * [ripple.ma](/examples/ripple.ma)
 
@@ -395,6 +399,7 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
 
 
 
+<a name="limitation">
 ##制限事項
 * Python である以上は避けられない宿命ですが、
   2016 以降の Maya の Parallel モードであっても
