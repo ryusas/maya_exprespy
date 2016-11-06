@@ -400,8 +400,7 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
 
 
 
-<a name="limitation">
-##制限事項
+## <a name="limitation"> 制限事項
 * Python である以上は避けられない宿命ですが、
   2016 以降の Maya の Parallel モードであっても
   Python を実行するノード（exprespy ノード、MASH_Python 等の他のノード、または Python で実装されたプラグインノード）
