@@ -120,40 +120,46 @@ def _toRawCode(code, cur_rawcode, curInputs, curOutputs):
             if plug and not isinstance(plug, list):
                 del curOutputs[idx]
                 knownOut[plug] = idx
-    #print(knownIn)
-    #print(knownOut)
+    #print(curInputs, knownIn)
+    #print(curOutputs, knownOut)
 
-    # 新しく入力されたコードを分析し、コネクションを決定する。
-    # 新しく確定されたインデックス、不要になったインデックス、維持されるインデックスに分類される。
+    # 新しく入力されたコードをパースし、プラグ表記部分をリストに格納する。
+    # 既存の入力プラグのインデックスが維持されるように、まずそれらを優先的に決定する。
     inputPlugToIdx = {}
+    keywords = []
+    for mat in _RE_PLUG.finditer(code):
+        name, eq = mat.groups()
+        names = cmds.ls(name)
+        n = len(names)
+        if n >= 2:
+            raise RuntimeError('Multiple name exists: ' + name)
+        if n:
+            # 実際に存在するプラグ名を処理する。
+            name = names[0]  # long name に統一。
+            keywords.append((name, eq) + mat.span(1))
+            if not eq:
+                _inheritPlugIndex(inputPlugToIdx, name, knownIn, curInputs)
+
+    # コネクションを決定する。
+    # 新しく確定されたインデックス、不要になったインデックス、維持されるインデックスに分類される。
     outputPlugToIdx = {}
-    inIdx = -1
-    outIdx = -1
+    inLastIdx = -1
+    outLastIdx = -1
     newcode = []
     ptr = 0
-    for mat in _RE_PLUG.finditer(code):
-        # 実際に存在するプラグ名を見つけたら、IN や OUT に置き換える。
-        name, eq = mat.groups()
-        if cmds.objExists(name):
-            names = cmds.ls(name)
-            if len(names) >= 2:
-                raise RuntimeError('Multiple name exists: ' + name)
-            name = names[0]
-            s, e = mat.span(1)
-            newcode.append(code[ptr:s])
+    for name, eq, s, e in keywords:
+        newcode.append(code[ptr:s])
+        ptr = e
 
-            # インデックスを確定する。管理されていないインデックスは維持するため避けられる。
-            if eq:
-                # 出力は、管理されているインデックスの維持は気にせずに再配置する。
-                i = _decideOutIndex(outputPlugToIdx, name, knownOut, curOutputs, outIdx)
-                newcode.append('OUT[%d]' % i)
-                outIdx = max(i, outIdx)
-            else:
-                # 入力は、管理されているインデックスをなるべく変えずに再利用する。
-                i = _decideInIndex(inputPlugToIdx, name, knownIn, curInputs, inIdx)
-                newcode.append('IN[%d]' % i)
-                inIdx = max(i, inIdx)
-            ptr = e
+        # インデックスを確定する。管理されていないインデックスは維持するため避けられる。
+        if eq:
+            # 出力は、管理されているインデックスの維持は気にせずに再配置する。
+            i, outLastIdx = _decidePlugIndex(outputPlugToIdx, name, knownOut, curOutputs, outLastIdx)
+            newcode.append('OUT[%d]' % i)
+        else:
+            # 入力は、管理されているインデックスをなるべく変えずに再利用する。
+            i, inLastIdx = _decidePlugIndex(inputPlugToIdx, name, None, curInputs, inLastIdx)
+            newcode.append('IN[%d]' % i)
     newcode.append(code[ptr:])
 
     # 不要になったインデックス辞書は参照方向を plug to indices から index to plug に直す。
@@ -171,47 +177,39 @@ def _toRawCode(code, cur_rawcode, curInputs, curOutputs):
     )
 
 
-def _decideInIndex(plugToIdxDict, plug, knownDict, keepDict, lastIdx):
+def _inheritPlugIndex(plugToIdxDict, plug, knownDict, keepDict):
     u"""
-    入力プラグのインデックスを決定する。
+    既存プラグのインデックスを変えないように継承する。
     """
-    # plugToIdxDict 確定済みのプラグならそれを利用。
-    idx = plugToIdxDict.get(plug)
-    if idx is None:
-        # 管理されたプラグなら、そのインデックスを変更せずに利用。
-        idxs = knownDict.pop(plug, None)
+    if plugToIdxDict.get(plug) is None:
+        # knownDict に管理されたプラグなら、そのインデックスが維持されるように keepDict と plugToIdxDict に格納する。
+        idxs = knownDict.pop(plug, None)  # 後で切断されないようにエントリーを除去する。
         if idxs:
             for idx in idxs:
                 keepDict[idx] = plug
-            idx = idxs[0]  # keepDict に追加したものも、いったん plugToIdxDict に格納するが、後で除去する。
-        # 未確定プラグなら keepDict 内のインデックスを避けて決定。
-        else:
-            idx = lastIdx + 1
-            while idx in keepDict:
-                idx += 1
-        plugToIdxDict[plug] = idx
-    return idx
+            plugToIdxDict[plug] = idxs[0]
 
 
-def _decideOutIndex(plugToIdxDict, plug, knownDict, keepDict, lastIdx):
+def _decidePlugIndex(plugToIdxDict, plug, knownDict, keepDict, lastIdx):
     u"""
-    出力プラグのインデックスを決定する。
+    プラグのインデックスを決定する。
     """
     # plugToIdxDict 確定済みのプラグならそれを利用。
     idx = plugToIdxDict.get(plug)
     if idx is None:
         # 未確定プラグなら keepDict 内のインデックスを避けて決定。
-        idx = lastIdx + 1
-        while idx in keepDict:
-            idx += 1
+        lastIdx += 1
+        while lastIdx in keepDict:
+            lastIdx += 1
+        idx = lastIdx
 
-        # 管理されたプラグでも、そのインデックスは維持しない。
-        if knownDict.get(plug) == idx:
+        # 管理されたプラグインデックスと一致したら、後で切断されないようにそのエントリーを除去する。
+        if knownDict and knownDict.get(plug) == idx:
             keepDict[idx] = plug
             del knownDict[plug]
-        plugToIdxDict[plug] = idx  # keepDict に追加したものも、いったん plugToIdxDict に格納するが、後で除去する。
 
-    return idx
+        plugToIdxDict[plug] = idx
+    return idx, lastIdx
 
 
 def _toHumanCode(code, input, output):
