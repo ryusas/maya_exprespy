@@ -1,3 +1,21 @@
+proc _registerNodeHelp(string $type, string $cmd)
+{
+    global string $gAttributeEditorNodeTypeArray[];
+    global string $gAttributeEditorHelpCommandArray[];
+
+    int $idx, $len = size($gAttributeEditorNodeTypeArray);
+    for ($idx = 0; $idx < $len; ++$idx) {
+        if ($type == $gAttributeEditorNodeTypeArray[$idx]) break;
+    }
+
+    if ($idx < $len) {
+        $gAttributeEditorHelpCommandArray[$idx] = $cmd;
+    } else {
+        $gAttributeEditorNodeTypeArray[$idx] = $type;
+        $gAttributeEditorHelpCommandArray[$idx] = $cmd;
+    }
+}
+
 global proc exprespy_code_new(string $plug)
 {
     python("exprespy.ae.code_new('"+ $plug +"')");
@@ -20,6 +38,9 @@ global proc exprespy_input_replace(string $plug)
 
 global proc AEexprespyTemplate(string $nodename)
 {
+    string $url = "https://github.com/ryusas/maya_exprespy";
+    _registerNodeHelp("exprespy", "showHelp -a \""+ $url +"\"");
+
     python("import exprespy.ae");
 
     editorTemplate("-beginScrollLayout");
