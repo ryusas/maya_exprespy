@@ -297,6 +297,10 @@ public:
     virtual ~Exprespy();
 
     MStatus compute(const MPlug&, MDataBlock&);
+
+#if MAYA_API_VERSION >= 20160000
+    SchedulingType schedulingType () const { return MPxNode::kGloballySerial; }
+#endif
 };
 
 MTypeId Exprespy::id(EXPRESPY_NODE_ID);
@@ -1168,7 +1172,7 @@ void Exprespy::_preparePyPlug1()
 //=============================================================================
 MStatus initializePlugin(MObject obj)
 { 
-    static const char* VERSION = "2.0.0.20161029";
+    static const char* VERSION = "2.0.2.20180828";
     static const char* VENDER  = "Ryusuke Sasaki";
 
     MFnPlugin plugin(obj, VENDER, VERSION, "Any");

@@ -7,7 +7,7 @@ python("import sys; [sys.modules.pop(k) for k in list(sys.modules) if k.startswi
 source AEexprespyTemplate;
 refreshEditorTemplates;
 """
-__version__ = '2.0.1.20170820'
+__version__ = '2.0.2.20180828'
 
 from .cmd import *
 
