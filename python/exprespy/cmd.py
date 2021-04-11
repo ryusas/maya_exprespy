@@ -2,9 +2,16 @@
 u"""
 Support module for exprespy plug-in.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+
+import sys
 import re
-from itertools import izip_longest
 import maya.cmds as cmds
+if sys.hexversion < 0x3000000:
+    from itertools import izip_longest as zip_longest
+else:
+    from itertools import zip_longest
 
 __all__ = ['create', 'setCode', 'getCode']
 
@@ -244,7 +251,7 @@ def _getInputDict(node, short=False, all=False):
     """
     node_i = node + '.i'
     if all:
-        res = dict(izip_longest([int(_RE_PLUG_INDEX.search(x).group(1)) for x in (cmds.listAttr(node_i, m=True) or [])], '', fillvalue=''))
+        res = dict(zip_longest([int(_RE_PLUG_INDEX.search(x).group(1)) for x in (cmds.listAttr(node_i, m=True) or [])], '', fillvalue=''))
     else:
         res = {}
     conn = cmds.listConnections(node_i, s=True, d=False, c=True, p=True) or []

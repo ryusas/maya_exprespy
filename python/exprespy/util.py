@@ -2,6 +2,9 @@
 u"""
 utility module.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+
 import traceback
 from weakref import ref as _wref
 

@@ -20,6 +20,8 @@ exprespy（エクスプレスパイ）と呼びます。
 さらに、Python API 2.0 の型に対応し、double3 や matrix アトリビュートはもちろんのこと、
 ジオメトリデータなどあらゆるデータ型を直接入出力することが可能です。
 
+Maya バージョンに応じて Python 2.x と Python 3.x に両対応しています。
+
 [制限事項](#limitation) をご一読の上ご利用ください。
 
 
@@ -54,6 +56,8 @@ Python のエクスプレッションコードは exec() 関数によって実�
 * plug-ins フォルダにあるプラットフォームとバージョンごとのフォルダに収められているファイルを
   MAYA_PLUG_IN_PATH の通ったフォルダにコピーします。
   (My Documents)\maya\\(version)\plug-ins でも OK です。
+
+  Maya 2022 以降の場合、フォルダ名に py2 を含むものが Python 2 用、含まないものが Python 3 用です。
 
 * python フォルダにあるファイルを PYTHONPATH の通ったフォルダにコピーします。
   (My Documents)\maya\scripts でも OK です。
@@ -263,7 +267,7 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
   |整数型 (short, long, enum 等)|int|
   |実数型 (double, float 等)|int か float (注2)|
   |単位付き実数型 (time, distance, angle)|int か float (注2)|
-  |string|unicode|
+  |string|unicode (py3以降はstr)|
   |matrix|API 2.0 MMatrix (注3)|
   |double3|API 2.0 MVector (注3)(注4)|
   |double3 以外の数値コンパウンド型|int か float の list (注3)(注4)|
@@ -285,10 +289,10 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
   |--:|:--|
   |bool|bool (注1)|
   |int|long (注1)|
-  |long int|long (注1)|
+  |long (py2のみ)|long (注1)|
   |float|double (注1)(注2)|
-  |str|string|
-  |unicode|string|
+  |str (py3以降はbytes)|string|
+  |unicode (py3以降はstr)|string|
   |API 2.0 MMatrix|matrix|
   |API 2.0 MVecotr|double3 (注2)|
   |API 2.0 MPoint|double3 (注2)|
@@ -420,9 +424,9 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
 
 * コード内には日本語などの非ASCII文字は出来るだけ含めないことを推奨します。
   もし、記述する場合は、通常のスクリプトと同様に、最初の行コメントにエンコーディング名を書いてください。
-  Windows では `cp932` 、Linux や Mac では `utf-8` です。
+  日本語Windows では `cp932` 、簡体中国語Windows では `cp936` 、 Linux や Mac では `utf-8` です。
   これは
-  [Mayaの仕様](https://knowledge.autodesk.com/ja/support/maya/troubleshooting/caas/sfdcarticles/sfdcarticles/kA23A000000mSqJ.html)
+  [Mayaの仕様](https://knowledge.autodesk.com/ja/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2015/JPN/Maya/files/Running-Maya-in-Japanese-Prepare-Maya-files-containing-Japanese-text-htm.html)
   によるものです。
   そして、残念ながら、プラットフォーム間でのファイルの受け渡しの際には注意が必要です（詳しくはリンク先の記事をお読みください）。
 
@@ -440,6 +444,11 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
 
 
 ## 改訂履歴
+* 2021.04.11: exprespy 3.0.0
+  - Python 3 に対応。
+  - unicode 文字列を string アトリビュートに出力する処理を改善（コードで指定されたエンコードタイプに依存せず unicode のまま処理）。
+  - サンプルシーン [noiseDeformer.ma](examples/noiseDeformer.ma) を Python 3 でも動くように修正。
+
 * 2018.08.28: exprespy 2.0.2
   - Parallel の効率が少しでも良くなるように、スケジューリングタイプを GloballySerial に設定。
 

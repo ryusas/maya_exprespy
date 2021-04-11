@@ -2,6 +2,7 @@
 u"""
 exprespy's AETemplate module.
 """
+from __future__ import absolute_import
 
 from functools import partial as _partial
 #import traceback

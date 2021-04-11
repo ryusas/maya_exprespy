@@ -2,10 +2,14 @@
 u"""
 Python Script Editor.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+
+import sys
+from weakref import WeakValueDictionary as _WeakValueDictionary
+
 import maya.cmds as cmds
 import maya.mel as mel
-
-from weakref import WeakValueDictionary as _WeakValueDictionary
 
 try:
     from shiboken2 import wrapInstance
@@ -22,6 +26,11 @@ except ImportError:
             import PyQt4.QtGui as QtWidgets
         except ImportError:
             wrapInstance = None
+
+if sys.hexversion < 0x3000000:
+    LONG = long
+else:
+    LONG = int
 
 
 #------------------------------------------------------------------------------
@@ -72,7 +81,7 @@ if wrapInstance:
         def __init__(self, name='scriptEditor', path='', **kwargs):
             parentName = cmds.setParent(q=True)
             p = MQtUtil.findLayout(parentName)
-            lytWd = wrapInstance(long(p), QtWidgets.QWidget)
+            lytWd = wrapInstance(LONG(p), QtWidgets.QWidget)
 
             widget = ScriptEditorWidget(name, textChangeHandler=self.textChanged, **kwargs)
             lytWd.layout().addWidget(widget)
@@ -120,7 +129,7 @@ if wrapInstance:
             self.__txt = ''
 
             p = MQtUtil.findControl(self.mayaEditor)
-            self.editor = p and wrapInstance(long(p), QtWidgets.QTextEdit)
+            self.editor = p and wrapInstance(LONG(p), QtWidgets.QTextEdit)
             if self.editor:
                 self.editor.setParent(self)
                 if textChangeHandler:
