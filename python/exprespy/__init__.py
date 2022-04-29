@@ -9,7 +9,7 @@ refreshEditorTemplates;
 """
 from __future__ import absolute_import
 
-__version__ = '3.0.0.20210411'
+__version__ = '3.0.0.20220429'
 
 from .cmd import *
 

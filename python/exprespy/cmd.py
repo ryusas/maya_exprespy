@@ -12,8 +12,13 @@ if sys.hexversion < 0x3000000:
     from itertools import izip_longest as zip_longest
 else:
     from itertools import zip_longest
+import maya.api.OpenMaya as _api2
 
 __all__ = ['create', 'setCode', 'getCode']
+
+_2_getAPathTo = _api2.MDagPath.getAPathTo
+_2_MFnDependencyNode = _api2.MFnDependencyNode
+_2_MSelectionList = _api2.MSelectionList
 
 
 #------------------------------------------------------------------------------
@@ -36,8 +41,9 @@ def setCode(node, code, raw=False):
         return
 
     # 既存の入出力プラグ辞書を得る。
-    keepIn = _getInputDict(node, all=True)
-    keepOut = _getOutputDict(node)
+    mfn = _2_MFnDependencyNode(_get_mnode(node))
+    keepIn = _getInputDict(mfn, all=True)
+    keepOut = _getOutputDict(mfn)
 
     # 既存のコードをチェックし、管理している入出力（編集対象）とそれ以外（維持対象）とに分離する。
     rawcode = cmds.getAttr(node + '.cd') or ''
@@ -66,13 +72,35 @@ def getCode(node, raw=False, short=False):
     exprespy ノードからコード文字列を得る。
     """
     code = cmds.getAttr(node + '.cd') or ''
-    return code if raw else _toHumanCode(code, _getInputDict(node, short), _getOutputDict(node, short))
+    if raw:
+        return code
+    mfn = _2_MFnDependencyNode(_get_mnode(node))
+    return _toHumanCode(code, _getInputDict(mfn, short), _getOutputDict(mfn, short))
 
 
 #------------------------------------------------------------------------------
 _RE_PLUG = re.compile(r'([\|\:]?[a-zA-Z_]\w*(?:[\|\:][a-zA-Z_]\w*)*(?:\.[a-zA-Z_]\w*(?:\[\d+\])?)+)(\s*\=)?')
 _RE_IO_PLUG = re.compile(r'(IN|OUT)\[(\d+)\]')
 _RE_PLUG_INDEX = re.compile(r'\[(\d+)\]$')
+
+
+def _get_mnode(name):
+    u"""
+    ノード名から API2 の MObject を得る。
+    """
+    sel = _2_MSelectionList()
+    sel.add(name)
+    return sel.getDependNode(0)
+
+
+def _mplugName(mplug, useLong=True):
+    u"""
+    MPlug の名前を得る。
+    """
+    try:
+        return _2_getAPathTo(mplug.node()).partialPathName() + '.' + mplug.partialName(includeNonMandatoryIndices=True, useLongNames=useLong)
+    except:
+        return mplug.partialName(includeNodeName=True, includeNonMandatoryIndices=True, useLongNames=useLong)
 
 
 def _printPlugChange(name, news, keeps, dels=None):
@@ -245,37 +273,68 @@ def _toHumanCode(code, input, output):
     return ''.join(newcode)
 
 
-def _getInputDict(node, short=False, all=False):
+#def _getInputDict(node, short=False, all=False):
+def _getInputDict(mfn, short=False, all=False):
     u"""
     インデクスをキーにした入力コネクション辞書を得る。
     """
-    node_i = node + '.i'
+    #node_i = node + '.i'
+    mplug = mfn.findPlug('i', False)
     if all:
-        res = dict(zip_longest([int(_RE_PLUG_INDEX.search(x).group(1)) for x in (cmds.listAttr(node_i, m=True) or [])], '', fillvalue=''))
+        res = dict(zip_longest([int(_RE_PLUG_INDEX.search(x).group(1)) for x in (cmds.listAttr(mplug.info, m=True) or [])], '', fillvalue=''))
     else:
         res = {}
-    conn = cmds.listConnections(node_i, s=True, d=False, c=True, p=True) or []
-    for dst, src in zip(conn[::2], cmds.ls(conn[1::2], sn=True) if short else conn[1::2]):
-        res[int(_RE_PLUG_INDEX.search(dst).group(1))] = src
+
+    #conn = cmds.listConnections(node_i, s=True, d=False, c=True, p=True) or []
+    #for dst, src in zip(conn[::2], cmds.ls(conn[1::2], sn=True) if short else conn[1::2]):
+    #    res[int(_RE_PLUG_INDEX.search(dst).group(1))] = src
+
+    # NOTE: (2022/4/29) ls コマンドのバグのためかショート名が得られない場合があるので、API による実装に切り替え。
+    getConElem = mplug.connectionByPhysicalIndex
+    mps = [getConElem(i) for i in range(mplug.numConnectedElements())]
+    useLong = not short
+    for i in range(mplug.numConnectedElements()):
+        mp = getConElem(i)
+        conn = mp.connectedTo(True, False)
+        if conn:
+            res[mp.logicalIndex()] = _mplugName(conn[0], useLong)
+
     return res
 
 
-def _getOutputDict(node, short=False):
+#def _getOutputDict(node, short=False):
+def _getOutputDict(mfn, short=False):
     u"""
     インデクスをキーにした出力コネクション辞書を得る。
     """
-    conn = cmds.listConnections(node + '.o', s=False, d=True, c=True, p=True) or []
     res = {}
-    for src, dst in zip(conn[::2], cmds.ls(conn[1::2], sn=True) if short else conn[1::2]):
-        idx = int(_RE_PLUG_INDEX.search(src).group(1))
-        other = res.get(idx)
-        if other:
-            if isinstance(other, list):
-                other.append(dst)
+
+    #conn = cmds.listConnections(node + '.o', s=False, d=True, c=True, p=True) or []
+    #for src, dst in zip(conn[::2], cmds.ls(conn[1::2], sn=True) if short else conn[1::2]):
+    #    idx = int(_RE_PLUG_INDEX.search(src).group(1))
+    #    other = res.get(idx)
+    #    if other:
+    #        if isinstance(other, list):
+    #            other.append(dst)
+    #        else:
+    #            res[idx] = [other, dst]
+    #    else:
+    #        res[idx] = dst
+
+    # NOTE: (2022/4/29) ls コマンドのバグのためかショート名が得られない場合があるので、API による実装に切り替え。
+    mplug = mfn.findPlug('o', False)
+    getConElem = mplug.connectionByPhysicalIndex
+    mps = [getConElem(i) for i in range(mplug.numConnectedElements())]
+    useLong = not short
+    for i in range(mplug.numConnectedElements()):
+        mp = getConElem(i)
+        conn = mp.connectedTo(False, True)
+        if conn:
+            if len(conn) == 1:
+                res[mp.logicalIndex()] = _mplugName(conn[0], useLong)
             else:
-                res[idx] = [other, dst]
-        else:
-            res[idx] = dst
+                res[mp.logicalIndex()] = [_mplugName(x, useLong) for x in conn]
+
     return res
 
 
