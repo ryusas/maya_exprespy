@@ -441,9 +441,16 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
 * MObject の入出力は少し非効率的な実装になっています（MDataBlock ではなくMPlug を経由しています）。
   MObject を C++ と Python の間で受け渡す良い方法が他に無いからです。
 
+* Maya のクォータニオンアトリビュートの型は統一されておらず、double4 の場合と、一般的な compound の場合の2通りがあります。たとえば、decomposeMatrix ノードの outputQuat アトリビュートや transform ノードの rotateQuaternion アトリビュートは double4 型ですが、quaternionNodes プラグインの提供する様々なノードのクォータニオンアトリビュートは一般 compound 型です。
+  exprespy では、double4 型を問題なく入出力できますが。compound 型の quaternion 値を入力することはできません。出力は問題ありません。
+  一般 compound 型 quaternion 値を入力したい場合は x, y, z, w 要素を個別に接続することで対応してください。
+
 
 
 ## 改訂履歴
+* 2022.07.02: exprespy 3.0.1.20220627
+  - double4 型データ出力が実装ミスにより動作していなかったのを修正。
+
 * 2022.04.29: exprespy 3.0.0.20220429
   - エディタ上にアトリビュートのショート名が正しく表示されない場合がある不具合を修正（利用していたlsコマンドのバグと思われる）。
 

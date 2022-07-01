@@ -127,7 +127,7 @@ static inline MObject _getDouble3Value(PyObject* valo)
 static inline MObject _getDouble4Value(PyObject* valo)
 {
     MFnNumericData fnOutData;
-    MObject data = fnOutData.create(MFnNumericData::k3Double);
+    MObject data = fnOutData.create(MFnNumericData::k4Double);
     fnOutData.setData(
         PyFloat_AS_DOUBLE(PySequence_GetItem(valo, 0)),
         PyFloat_AS_DOUBLE(PySequence_GetItem(valo, 1)),
@@ -714,7 +714,18 @@ MStatus Exprespy::_executeCode(MDataBlock& block)
                     case MFn::kData3Double:  // double3 --> MVector (API2)
                         _setInputVector3(idx, data);
                         break;
-                    case MFn::kData4Double:  // double3 --> list
+                    case MFn::kData4Double:  // double4 --> list
+                        // NOTE:
+                        //   transform.rotateQuaternion は double4 だが、quatNodes の quaternion は double4 ではなく compound である。
+                        //   double4 とそれ相当の compound 同士を接続する分には問題なく値のやりとりがされる。
+                        //   generic の出力でも double4 データを作って出していれば double4 でも compound でも受け取れるようだ。
+                        //
+                        //   compound の場合の generic の入力が問題となる。
+                        //   それは hInput.type() == kInvalid && data.apiType() == kInvalid となり、
+                        //   ここには来ずに default の方に行き、値を得ることができず None となる。
+                        //   タイプ判別ができないだけでなく、本当に得られない。
+                        //   MFnNumericData() で無理やり得ようとしてもダメだし、2019 から追加された asDouble4() でも得られない。
+                        //   ちなみに、generic だからか asDouble4() では MFn::kData4Double の場合でも得られないようだ。
                         _setInputDouble4(idx, data);
                         break;
                     default:                 // other data --> MObject (API2 or 1)
@@ -1311,7 +1322,7 @@ void Exprespy::_preparePyPlug1()
 //=============================================================================
 MStatus initializePlugin(MObject obj)
 { 
-    static const char* VERSION = "3.0.0.20210411";
+    static const char* VERSION = "3.0.1.20220627";
     static const char* VENDER  = "Ryusuke Sasaki";
 
     MFnPlugin plugin(obj, VENDER, VERSION, "Any");
