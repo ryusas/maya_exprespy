@@ -12,20 +12,24 @@ import maya.cmds as cmds
 import maya.mel as mel
 
 try:
-    from shiboken2 import wrapInstance
-    from PySide2 import QtCore, QtGui, QtWidgets
+    from shiboken6 import wrapInstance
+    from PySide6 import QtCore, QtGui, QtWidgets
 except ImportError:
     try:
-        from shiboken import wrapInstance
-        from PySide import QtCore, QtGui
-        import PySide.QtGui as QtWidgets
+        from shiboken2 import wrapInstance
+        from PySide2 import QtCore, QtGui, QtWidgets
     except ImportError:
         try:
-            from sip import wrapinstance as wrapInstance
-            from PyQt4 import QtCore, QtGui
-            import PyQt4.QtGui as QtWidgets
+            from shiboken import wrapInstance
+            from PySide import QtCore, QtGui
+            import PySide.QtGui as QtWidgets
         except ImportError:
-            wrapInstance = None
+            try:
+                from sip import wrapinstance as wrapInstance
+                from PyQt4 import QtCore, QtGui
+                import PyQt4.QtGui as QtWidgets
+            except ImportError:
+                wrapInstance = None
 
 if sys.hexversion < 0x3000000:
     LONG = long
