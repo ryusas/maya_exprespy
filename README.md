@@ -1,330 +1,291 @@
 # maya_exprespy
-Maya で Python によるエクスプレッション機能を提供するノードのプラグインです。
-exprespy（エクスプレスパイ）と呼びます。
+
+English | [日本語](README.ja.md)
+
+A node plugin that provides Python expression functionality in Maya.
+It is called "exprespy".
 
 ![exprespy](images/exprespy.png)
 
 
 
-## 特徴
-本プラグインは実行速度を重視し、C++ でノードが実装されています。
-また、それによって、Pythonエクスプレッションコードはコンパイルされたものがメモリに保持され、
-効率的に実行されるようになっています。
+## Features
+This plugin is implemented as a C++ node with a focus on execution speed.
+As a result, Python expression code is kept compiled in memory and executed efficiently.
 
-また、エディタ（アトリビュートエディタ）上では、標準のエクスプレッション機能と同様に
-実際のノード・アトリビュート名でのコーディングが可能です。
-それらは、標準機能と同様に、実際はノードのコネクションに置き換えられるようになっています。
-ただし、単位変換の機能はなく常に内部単位で扱われるという点が標準機能と異なります。
-これだけが少し初心者向けでない部分ですが、効率重視たる所以です。
+Furthermore, in the editor (Attribute Editor), you can write code using actual node and attribute names, just like the native Expression Editor.
+These names are automatically replaced with actual node connections, similar to the native functionality.
+However, unlike native expressions, it does not perform unit conversion and always handles values in internal units.
+This is the only part that might be slightly tricky for beginners, but it is the reason for its high efficiency.
 
-さらに、Python API 2.0 の型に対応し、double3 や matrix アトリビュートはもちろんのこと、
-ジオメトリデータなどあらゆるデータ型を直接入出力することが可能です。
+In addition, it supports Python API 2.0 types, allowing you to directly input and output any data types—not only double3 and matrix attributes but also geometry data.
 
-Maya バージョンに応じて Python 2.x と Python 3.x に両対応しています。
+It supports both Python 2.x and Python 3.x depending on the Maya version.
 
-[制限事項](#limitation) をご一読の上ご利用ください。
+Please read the [Limitations](#limitation) section before use.
 
 
 
-## 類似技術
-標準で付属する MASH には Python ノードがあり、Python でモーショングラフィックスを制御することが出来ます。
-ただ、それは particle データを制御する仕組みで、それに特化された性能は素晴らしいですが汎用的なものではありません。
+## Similar Technologies
+The bundled MASH feature includes a Python node that allows you to control motion graphics using Python.
+However, that is a mechanism designed to control particle data, and while its specialized performance is excellent, it is not general-purpose.
 
-また、Python で通常のエクスプレッションを書けるようにするプラグインは
-[SOuP](http://www.soup-dev.com/)
-に含まれる
-[pyExpression](http://www.soup-dev.com/wiki/PyExpression.html)
-ノードが有名です。
-しかし、それは全て Python で実装されており、
-Python のエクスプレッションコードは exec() 関数によって実行される仕組みで、
-実行するたびにコードをコンパイルするため効率的ではありません。
-私はこのプラグインの志に惹かれ、より良いものをと思い exprespy を作りました。
+Additionally, a well-known plugin that allows writing regular expressions in Python is the [pyExpression](http://www.soup-dev.com/wiki/PyExpression.html) node included in [SOuP](http://www.soup-dev.com/).
+However, it is entirely implemented in Python, and its Python expression code is executed using the `exec()` function, which compiles the code every time it runs and is therefore inefficient.
+I was drawn to the aspirations of that plugin, and created exprespy to make something even better.
 
 
 
-## ディレクトリ構成
-* [examples](examples): Mayaシーンの例。
-* [plug-ins](plug-ins): ビルド済みプラグインバイナリ。
-* [python](python): サポート python モジュール。
-* [scripts](scripts): サポート mel スクリプト。
-* [srcs](srcs): C++ソースコード。
-* [viewTemplates](viewTemplates): ノードエディタのためのテンプレート。
+## Directory Structure
+* [examples](examples): Example Maya scenes.
+* [plug-ins](plug-ins): Prebuilt plugin binaries.
+* [python](python): Supporting Python modules.
+* [scripts](scripts): Supporting MEL scripts.
+* [srcs](srcs): C++ source code.
+* [viewTemplates](viewTemplates): Templates for the Node Editor.
 
 
 
-## インストール方法
-* plug-ins フォルダにあるプラットフォームとバージョンごとのフォルダに収められているファイルを
-  MAYA_PLUG_IN_PATH の通ったフォルダにコピーします。
-  (My Documents)\maya\\(version)\plug-ins でも OK です。
+## Installation Method
+* Copy the files inside the folder for your platform and version under the "plug-ins" directory to a folder included in your `MAYA_PLUG_IN_PATH`.
+  `Documents\maya\(version)\plug-ins` is also fine.
 
-  Maya 2022 以降の場合、フォルダ名に py2 を含むものが Python 2 用、含まないものが Python 3 用です。
+  For Maya 2022 and later, folder names containing "py2" are for Python 2, and those without are for Python 3.
 
-* python フォルダにあるファイルを PYTHONPATH の通ったフォルダにコピーします。
-  (My Documents)\maya\scripts でも OK です。
+* Copy the files in the "python" folder to a folder included in your `PYTHONPATH`.
+  `Documents\maya\scripts` is also fine.
 
-* scripts フォルダにあるファイルを MAYA_SCRIPT_PATH の通ったフォルダにコピーします。
-  (My Documents)\maya\scripts でも OK です。
+* Copy the files in the "scripts" folder to a folder included in your `MAYA_SCRIPT_PATH`.
+  `Documents\maya\scripts` is also fine.
 
-* viewTemplates フォルダにあるファイルを MAYA_CUSTOM_TEMPLATE_PATH の通ったフォルダにコピーします。
-  設定されていなければ (My Documents)\maya\\(version)\prefs\viewTemplates で OK です。
-
+* Copy the files in the "viewTemplates" folder to a folder included in your `MAYA_CUSTOM_TEMPLATE_PATH`.
+  If not configured, `Documents\maya\(version)\prefs\viewTemplates` is fine.
 
 
-## サンプルシーン
+
+## Sample Scenes
 * [bend_roll.ma](examples/bend_roll.ma)
 
   ![bend_roll](images/bend_roll.png)
 
-  [rotationDriver](https://github.com/ryusas/maya_rotationDriver) のサンプルをエクスプレッションで置き換えてみたもの。
+  An example replacing the [rotationDriver](https://github.com/ryusas/maya_rotationDriver) sample with expressions.
 
-  この程度のノード実装であればエクスプレッションで十分実現可能なことが分かります。
+  It shows that expressions are fully capable of handling node implementations of this level.
 
-  本来は Maya の Parallel モードの恩恵を受けるためにも、ノードは C++ で実装するのが一番なのですが、
-  Python でノードプラグインを実装するくらいなら多くの場合 exprespy で十分です。
+  To fully benefit from Maya's Parallel Evaluation mode, it is ideal to implement nodes in C++. However, in most cases where you might implement a node plugin in Python, exprespy is more than sufficient.
 
 * [bezierCurve.ma](examples/bezierCurve.ma)
 
   ![bezierCurve](images/bezierCurve.png)
 
-  ベジェカーブの接線を自動的に制御する例。カーブリグのコントロールなどで有効と思います。
+  An example of automatically controlling Bézier curve tangents. Useful for curve rig controls.
 
-  これは、エクスプレッションからシェイプデータを出力する例でもあります。
+  This also serves as an example of outputting shape data from an expression.
 
-  各CVに対応したロケータを移動させると、カーブが滑らかになるように接線が制御されます。
-  ロケータを回転やスケールさせて、自動制御された接線をさらに操作することも出来ます。
-  bezierCurve シェイプノードに追加した closed アトリビュートを ON にすると閉じたカーブになります。
-  入力ポイントの増減にはリアルタイムに追従するようになっていて、
-  アトリビュートエディタの Inputs フレーム内の GUI で入力を削除したり、
-  ノードエディタで接続を追加したり切断したりすることが出来ます。
+  Moving the locators corresponding to each CV adjusts the tangents automatically to keep the curve smooth.
+  You can also rotate or scale the locators to further manipulate the automatically controlled tangents.
+  Turning ON the `closed` attribute added to the bezierCurve shape node closes the curve.
+  It tracks the addition and removal of input points in real-time. You can delete inputs using the GUI within the "Inputs" frame of the Attribute Editor, or add/disconnect connections in the Node Editor.
 
-  exprespy は、Python API 1.0 と 2.0 のオブジェクト出力を自動判別することが出来るので、
-  2.0 で nurbsCurve 制御が可能なバージョンなら 2.0 を、そうでないなら 1.0 を使用するという
-  実装をしており、2012 以降の全バージョンで動作します。
-  if 文で切り分けて両方の実装がコーディングされています。1.0 に比べて 2.0 だとすっきりと書け、
-  実行速度が高速であることも比較できると思います。
+  Since exprespy can automatically detect object outputs from Python API 1.0 and 2.0, this example implements a setup that uses 2.0 if the Maya version supports nurbsCurve control in 2.0, and 1.0 otherwise. It runs on all versions since Maya 2012.
+  Both implementations are coded and separated with an `if` statement. You can see how 2.0 is written much more cleanly and executes faster compared to 1.0.
 
 * [closestPoints.ma](examples/closestPoints.ma)
 
   ![closestPoints](images/closestPoints.png)
 
-  入力ロケータに対し mesh、nurbsSurface、nurbsCurve のそれぞれの表面上の近い点を算出し
-  それぞれに対応する３つのロケータの位置を拘束する例。
-  mesh と nurbsSurface では、表面の法線や接線も得て、ロケータの向きも拘束しています。
+  An example that calculates the closest point on the surface of a mesh, nurbsSurface, and nurbsCurve relative to an input locator, and constrains the positions of three corresponding locators.
+  For mesh and nurbsSurface, it also retrieves surface normals and tangents to constrain the orientations of the locators.
 
-  これは、エクスプレッションにシェイプデータを入力する例でもあります。
+  This also demonstrates inputting shape data into an expression.
 
-  Python API 2.0 では、シェイプデータを処理する機能の多くは 2016 で搭載されました。
-  この例では、それより前のバージョンでも動作するように 1.0 で実装しています。
-  1.0 用のシェイプデータを入力するために、個々の exprespy ノードの `Inputs API 1.0 MObject` を ON にしています。
+  In Python API 2.0, many features for processing shape data were introduced in Maya 2016. This example is implemented in 1.0 so that it runs on older versions as well.
+  To input shape data for 1.0, the `Inputs API 1.0 MObject` option is turned ON on individual exprespy nodes.
 
 * [closestPoints2016.ma](examples/closestPoints2016.ma)
 
   ![closestPoints](images/closestPoints.png)
 
-  [closestPoints.ma](examples/closestPoints.ma) を 2016 以降に最適化した例。
-  入力されたシェイプデータの処理には Python API 2.0 を用いています。
-  1.0 に比べて非常にすっきりと書け、また実行速度も高速です。
-  ただ、ワールドスペースでのクエリがうまくいかなかったため（2.0 の問題でしょうか）、
-  入力に transformGeometry ノードを挿入しています。
+  An optimized version of [closestPoints.ma](examples/closestPoints.ma) for Maya 2016 and later.
+  It uses Python API 2.0 to process the input shape data.
+  Compared to 1.0, the code is very clean and runs faster.
+  However, because queries in world space did not work properly (perhaps an issue with API 2.0), a `transformGeometry` node is inserted into the input.
 
-  Python エクスプレッションには、
-  [noiseDeformer.ma](examples/noiseDeformer.ma) のように全頂点を出力処理する操作は荷が重いですが、
-  このように入力シェイプを参照して何かをする用途には有効に使えるのではないかと思います。
+  While operations that process and output all vertices—such as [noiseDeformer.ma](examples/noiseDeformer.ma)—can be demanding for Python expressions, Python expressions are highly effective for referencing input shapes to perform operations as demonstrated here.
 
 * [constraints.ma](examples/constraints.ma)
 
   ![constraints](images/constraints.png)
 
-  様々なコンストレイン機能をエクスプレッションで実装した簡単な例。最初に見るのにお勧めです。
+  A simple example implementing various constraint functions via expressions. Highly recommended to look at first.
 
-  position、orient、アップオブジェクト無しの aim、アップオブジェクト有りの aim を実装しています。
+  It implements position, orient, aim without an up-object, and aim with an up-object.
 
 * [epcurve.ma](examples/epcurve.ma)
 
   ![epcurve](images/epcurve.png)
 
-  ロケータで制御点列を与えることで滑らかなカーブが生成されるという点で、
-  見た目の結果が [bezierCurve.ma](examples/bezierCurve.ma) に近いのですが、
-  こちらは EP Curve Tool でカーブを描く操作を動的に行うことで制御しています。
+  Generates a smooth curve by providing control points via locators. While visually similar to [bezierCurve.ma](examples/bezierCurve.ma), this curve is controlled by dynamically performing the equivalent of drawing a curve with the EP Curve Tool.
 
-  単に API の機能を呼び出しているに過ぎませんので、コードは比較的短めです。
+  Since it simply calls API functions, the code is relatively short.
 
-  ただ、こちらの手法ですと、接線の手動制御は出来ませんし、
-  局所的な変更がカーブ全域に及んでしまうという問題もあり、
-  実際のリグではベジェカーブの方が有効だと思います。
+  However, with this method, you cannot manually control the tangents, and local modifications propagate across the entire curve. For actual rigs, the Bézier curve approach is more practical.
 
 * [noiseDeformer.ma](examples/noiseDeformer.ma)
 
   ![noiseDeformer](images/noiseDeformer.png)
 
-  シンプルなノイズデフォーマーの実装例です。
-  time を入力しているのでアニメーションします。
-  mesh の transform ノードに、ノイズの制御アトリビュートがいくつか追加されています。
+  An implementation example of a simple noise deformer.
+  Since `time` is input, it animates.
+  Several noise control attributes are added to the mesh's transform node.
 
-  これは、エクスプレッションにシェイプデータを入力し、さらに出力するという例でもあります。
+  This also serves as an example of inputting and then outputting shape data in expressions.
 
-  ここで行っている mesh の処理は Python API 2.0 の最初のバージョンから可能ですので、
-  すべて 2.0 で実装していますので、比較的コードはすっきりしています。
-  ただし、ノイズ関数もエクスプレッション中に実装したのでコードは長めです。
-
-  この程度の頂点数でもそれなりに重いので、やはり大量の頂点をリアルタイムに処理するのは
-  Python API 2.0 でも厳しいようです。
-  やはり、メッシュデフォーメーション用途では、それに特化した taikomatsu 氏の
-  [SeExprMesh](https://github.com/taikomatsu/SeExprMeshMaya) 等の方が向いていると思います。
+  The mesh processing here is supported since the initial version of Python API 2.0, so it is fully implemented in 2.0, resulting in clean code. However, the code is long because the noise function itself is also written inside the expression.
+  Even with this level of vertex count, it is relatively heavy, showing that processing a large number of vertices in real-time is difficult even with Python API 2.0.
+  For mesh deformation tasks, specialized tools like taikomatsu's [SeExprMesh](https://github.com/taikomatsu/SeExprMeshMaya) are better suited.
 
 * [ripple.ma](examples/ripple.ma)
 
   ![ripple](images/ripple.png)
 
-  [SOuP](http://www.soup-dev.com/) の pyExpression のサンプルを速度比較のために置き換えたてみたもの。
-  dgtimer でノードの処理速度のみを比較すると、なんと約15倍高速化されています。
-  フレームレート比較では描画負荷などもあるため純粋なノードの性能比較ほどの差はありませんし、
-  環境によっても変わりますが、私の環境では3.5倍程度の高速化でした。
+  A recreation of [SOuP](http://www.soup-dev.com/)'s pyExpression sample for performance comparison.
+  Comparing only the node processing speed with `dgtimer`, it is about 15 times faster.
+  In terms of framerate comparison, the difference is not as extreme due to drawing overhead, and it varies by environment, but it was about 3.5 times faster in my environment.
 
-  また、アトリビュート名でコーディングせず、``IN`` や ``OUT`` で書くためのごく簡単な例でもあります。
-
+  This is also a simple example showing how to write code using `IN` and `OUT` instead of attribute names.
 
 
-## 使用方法
-エクスプレッションを記述するには、まず exprespy ノードを生成します。
-以下のような方法が利用できます。
 
-* プラグインをロードしてから、以下の mel コードを実行。またはノードエディタ等でノード作成。
+## Usage
+To write expressions, first create an exprespy node. You can use the following methods:
+
+* Load the plugin, and then run the following MEL code (or create the node in the Node Editor, etc.):
 
   ``` py
   createNode exprespy;
   ```
 
-* または、以下の Python コードを実行（プラグインはロードされていなくてもOK）。
+* Or run the following Python code (it works even if the plugin is not loaded yet):
 
   ``` py
   import exprespy
   exprespy.create()
   ```
 
-その後、生成された exprespy ノードのアトリビュートエディタにコードを入力します。
+After that, enter your code into the Attribute Editor of the created exprespy node.
 
-使い方は標準エクスプレッション機能とだいたい同じで、
-コード中に書いた `ノード名.アトリビュート名` の部分が実際の入出力に置き換えられます（
-`=` で入力している左辺が出力に、それ以外は入力と識別されます）。
+The usage is mostly the same as native expressions: any `nodeName.attributeName` written in the code is automatically replaced with actual inputs and outputs (the left side of a `=` assignment is identified as an output, and everything else as an input).
 
-エディタは標準のスクリプトエディタと同じコントロールを採用しています（
-PySide（2014以降は標準搭載）か PyQt が使えない環境ではシンプルなエディタになります）。
-各種ショートカットキーも同じです。
-TabキーでのインデントがTabになるかSpaceになるかの設定も引き継がれます。
+The editor uses the same controls as Maya's native Script Editor (it falls back to a simple text editor in environments where PySide/PyQt is unavailable; PySide is included by default in 2014 and later).
+All shortcut keys are the same.
+The setting for whether pressing Tab inputs a tab character or spaces is also inherited.
 
-エディタの下には以下のようなチェックボックスが在ります。
-エディタとの境界線を調整することで、エディタのサイズを調整出来ます。
+Below the editor, there are checkboxes like the ones shown below.
+You can adjust the size of the editor by dragging the border line.
 
 ![ui_buttons](images/ui_buttons.png)
 
-- Line Number: エディタの行番号の表示を ON/OFF する UI 設定です。
-- Raw Mode: ローモードを ON/OFF する UI 設定です。
-  詳しくは、詳細仕様の [コードの保存の仕組みと IN と OUT の活用方法](#rawmode) を参照してください。
-- Short Name: アトリビュート名を短い名前で表示するかどうかを ON/OFF する UI 設定です。
-- Inputs API 1.0 MObject: その exprespy ノードで、シェイプ等のデータ型の入力を API 1.0 に切り替えます。
-  これだけがノードごとの設定（ノードの持つアトリビュート）です。
-  詳しくは、詳細仕様の [入力アトリビュートの型](#input) を参照してください。
+- Line Number: UI setting to show/hide line numbers in the editor.
+- Raw Mode: UI setting to toggle Raw Mode ON/OFF.
+  For details, see [How Code is Saved and How to Utilize IN and OUT](#rawmode) in the Detailed Specifications section.
+- Short Name: UI setting to toggle whether attribute names are displayed as short names.
+- Inputs API 1.0 MObject: Switches the inputs of data types like shapes on the exprespy node to API 1.0.
+  This is the only setting that is per-node (stored as an attribute on the node).
+  For details, see [Input Attribute Types](#input) in the Detailed Specifications section.
 
-さらに下には、入力要素を直接管理する UI が在ります。
+Further down is a UI for directly managing input elements.
 
 ![ui_inputs](images/ui_inputs.png)
 
-通常は使用する必要はありませんが、
-詳しくは、詳細仕様の [コードの保存の仕組みと IN と OUT の活用方法](#rawmode) を参照してください。
+Normally you do not need to use this, but for details, see [How Code is Saved and How to Utilize IN and OUT](#rawmode) in the Detailed Specifications section.
 
 
 
-## 詳細仕様
+## Detailed Specifications
 
-* 内部単位での扱い
+* Handling in Internal Units
 
-  単位付きアトリビュートは入出力とも内部単位で扱われます。
-  time は秒、
-  doubleLinear(distance) は centimeter 、
-  doubleAngle は radian
-  での扱いとなります。
-
-
-* 入出力と依存関係
-
-  入力として参照したアトリビュートは exprespy ノードの input[] アトリビュートに、
-  出力として参照した（ = で代入した）アトリビュートは output[] アトリビュートに接続されます。
-  それらの型は generic で、何を繋いでも unitConversion ノードは挟まらず効率的に動作します。
-
-  全ての出力は全ての入力に依存することになります。コード上の論理的な依存関係は関係ありません。
-  よって、シーン中の全ての処理を一つの exprespy ノードに書くのは良くありません。
-  こういった考え方や仕組みは標準の expression ノードと全く同じものです。
+  Attributes with units are handled in internal units for both inputs and outputs.
+  - time is in seconds
+  - doubleLinear (distance) is in centimeters
+  - doubleAngle is in radians
 
 
-* <a name="input"> 入力アトリビュートの型
+* Inputs, Outputs, and Dependencies
 
-  入力アトリビュートの型は Python では以下のように扱われます。
+  Attributes referenced as inputs are connected to the `input[]` attribute of the `exprespy` node, and attributes referenced as outputs (assigned with `=`) are connected to the `output[]` attribute.
+  Their types are generic, allowing any connections without inserting `unitConversion` nodes, ensuring efficient performance.
 
-  |Mayaアトリビュートの型|Pythonの型|
+  All outputs depend on all inputs. Logical dependencies within the code do not separate them.
+  Therefore, it is bad practice to write all the logic of your scene into a single `exprespy` node.
+  This concept and mechanism is exactly the same as the native `expression` node.
+
+
+* <a name="input"> Input Attribute Types
+
+  In Python, input attribute types are mapped as follows:
+
+  | Maya Attribute Type | Python Type |
   |--:|:--|
-  |bool|int (注1)|
-  |整数型 (short, long, enum 等)|int|
-  |実数型 (double, float 等)|int か float (注2)|
-  |単位付き実数型 (time, distance, angle)|int か float (注2)|
-  |string|unicode (py3以降はstr)|
-  |matrix|API 2.0 MMatrix (注3)|
-  |double3|API 2.0 MVector (注3)(注4)|
-  |double3 以外の数値コンパウンド型|int か float の list (注3)(注4)|
-  |その他の型（シェイプデータ等）|API 2.0 MObject (API 1.0 に切り替え可能 (注5)|
-  |null や異常事態の場合|None|
+  | bool | int (Note 1) |
+  | Integer types (short, long, enum, etc.) | int |
+  | Real number types (double, float, etc.) | int or float (Note 2) |
+  | Real number types with units (time, distance, angle) | int or float (Note 2) |
+  | string | unicode (str from py3 onward) |
+  | matrix | API 2.0 MMatrix (Note 3) |
+  | double3 | API 2.0 MVector (Note 3)(Note 4) |
+  | Numeric compound types other than double3 | list of int or float (Note 3)(Note 4) |
+  | Other types (shape data, etc.) | API 2.0 MObject (can switch to API 1.0) (Note 5) |
+  | null or error state | None |
 
-  - (注1): 数値アトリビュート入力の型判別が出来ないため、残念ながら bool は int になってしまいます。
-  - (注2): 数値アトリビュート入力の型判別が出来ないため、基本は float ですが整数化可能なら int となります。
-  - (注3): 入力された MMatrix や MVector や list をエクスプレッション内で書き換えてしまっても問題ありません。
-  - (注4): 数ある数値コンパウンド型の中で double3 のみ利便性と過去の経緯から MVector となります。MPoint や MEulerRotation が欲しい場合は変換してください。その他は全て list になりますので、必要に応じて欲しい型に変えてください。例えば double4 は自動的には MQuaternion になりません。
-  - (注5): 個々の exprespy ノードの `Inputs API 1.0 MObject`（`inputsAPI1` アトリビュート）を ON にすると MObject のみが API 1.0 に切り替わります。
+  - (Note 1): Since type identification is unavailable for numeric attribute inputs, unfortunately, `bool` is converted to `int`.
+  - (Note 2): Since type identification is unavailable for numeric attribute inputs, they default to `float`, but become `int` if they can be represented as an integer.
+  - (Note 3): It is perfectly safe to modify input `MMatrix`, `MVector`, or `list` variables within the expression.
+  - (Note 4): Among all numeric compound types, only `double3` is mapped to `MVector` for convenience and historical reasons. If you need an `MPoint` or `MEulerRotation`, please convert them. Other compound types are mapped to `list`, so convert them as needed (e.g., `double4` does not automatically become an `MQuaternion`).
+  - (Note 5): Turning ON the `Inputs API 1.0 MObject` (`inputsAPI1` attribute) on individual `exprespy` nodes switches only `MObject` inputs to API 1.0.
 
 
-* <a name="output"> 出力アトリビュートの型
+* <a name="output"> Output Attribute Types
 
-  Python の出力は Maya では以下のようなアトリビュート型になります。
+  In Maya, Python outputs are mapped to attribute types as follows:
 
-  |Pythonの型|Mayaアトリビュートの型|
+  | Python Type | Maya Attribute Type |
   |--:|:--|
-  |bool|bool (注1)|
-  |int|long (注1)|
-  |long (py2のみ)|long (注1)|
-  |float|double (注1)(注2)|
-  |str (py3以降はbytes)|string|
-  |unicode (py3以降はstr)|string|
-  |API 2.0 MMatrix|matrix|
-  |API 2.0 MVecotr|double3 (注2)|
-  |API 2.0 MPoint|double3 (注2)|
-  |API 2.0 MEulerRotation|double3 (注2)|
-  |API 2.0 MQuaternion|double4 (注2)|
-  |API 2.0 MColor|float3|
-  |API 2.0 MFloatVector|float3|
-  |API 2.0 MFloatPoint|float3|
-  |sequence (list や tuple 等)|適切な数値コンパウンド型 (注2)(注3)|
-  |API 2.0 MObject|データ型ならそのまま|
-  |API 1.0 MObject|データ型ならそのまま|
-  |その他の認識できないもの|無視|
+  | bool | bool (Note 1) |
+  | int | long (Note 1) |
+  | long (py2 only) | long (Note 1) |
+  | float | double (Note 1)(Note 2) |
+  | str (bytes from py3 onward) | string |
+  | unicode (str from py3 onward) | string |
+  | API 2.0 MMatrix | matrix |
+  | API 2.0 MVector | double3 (Note 2) |
+  | API 2.0 MPoint | double3 (Note 2) |
+  | API 2.0 MEulerRotation | double3 (Note 2) |
+  | API 2.0 MQuaternion | double4 (Note 2) |
+  | API 2.0 MColor | float3 |
+  | API 2.0 MFloatVector | float3 |
+  | API 2.0 MFloatPoint | float3 |
+  | sequence (list, tuple, etc.) | Appropriate numeric compound type (Note 2)(Note 3) |
+  | API 2.0 MObject | Keeps as data type |
+  | API 1.0 MObject | Keeps as data type |
+  | Other unrecognized types | Ignored |
 
-  - (注1): 型が完全に一致しなくても、あらゆるスカラー数値型（単位付き数値型も含む）を接続可能です。
-  - (注2): 単位付き実数型 (time, distance, angle) も unitConversion ノード無しで接続可能です。
-  - (注3): 数値コンパウンドには short2, short3, long2, long3, double2, double3, double4, float2, float3 といったものがあり、どれも接続可能です。Python sequence の長さが 4 を超えていても 4 で打ち切られます。
-
-
-* スコープ
-
-  個々の Python エクスプレッションコードはそれぞれ独立したグローバルスコープで動きます
-  （バージョン 1.0 では Maya Python のグローバルスコープの名前を参照出来ましたが、
-  実装が修正されそれは不可能になりました）。
-
-  個々のグローバルスコープは、コードが編集されコンパイルし直されるまで保持されます。
-  それによって、例えば、状態を記憶して次の実行で再利用したり、
-  最初の一回だけ実行される初期化処理を書くことが可能です。
+  - (Note 1): Any scalar numeric types (including numeric types with units) can be connected even if types do not match exactly.
+  - (Note 2): Numeric types with units (time, distance, angle) can also be connected without inserting a `unitConversion` node.
+  - (Note 3): Supported numeric compounds include `short2`, `short3`, `long2`, `long3`, `double2`, `double3`, `double4`, `float2`, and `float3`, all of which can be connected. If the Python sequence length exceeds 4, it is truncated to 4.
 
 
-* モジュール
+* Scope
 
-  Python エクスプレッションコードでは、以下のモジュールがインポート済みで使える状態となっています。
+  Each Python expression code runs in its own independent global scope (in version 1.0, accessing names in Maya's Python global scope was possible, but this was resolved in an update).
+  Each global scope is retained until the code is edited and recompiled.
+  This allows you, for example, to store states for reuse in subsequent executions or write initialization logic that runs only once on the first frame.
+
+
+* Modules
+
+  In Python expression code, the following modules are pre-imported and ready to use:
 
   ``` py
   import sys
@@ -335,167 +296,143 @@ TabキーでのインデントがTabになるかSpaceになるかの設定も引
   import maya.mel as mel
   ```
 
-  他に必要なモジュールがあれば自由に import してください
-  （一般的に import 文の負荷は高めなので、初期化処理で行う実装を推奨）。
+  Feel free to import any other modules you need (since `import` statements usually carry overhead, performing imports within initialization logic is recommended).
 
 
-* 特殊変数
+* Special Variables
 
   - `COUNT`
 
-    コードがコンパイルされてからの実行カウントです。
-    コードを変更したりファイルを開いたりした後からそれが何回実行されたかです。
-    初回呼び出しでは 0 なので、それを判別して初期化処理を書くことが出来ます。
+    The execution count since the code was compiled.
+    It represents how many times the code has been run since modifying code or opening the file.
+    It is 0 on the first call, which can be checked to run initialization code.
 
   - `IN`
 
-    入力アトリビュート値が格納されている dict です。
-    キーは input[] アトリビュートのインデックスです。
-    list でないのは、アトリビュートと同様に欠番に対応するためです。
-
-    実行されるたびにこの dict 全体が再セットされます。
+    A dictionary storing input attribute values.
+    The keys are the indices of the `input[]` multi-attribute.
+    It is a dictionary rather than a list to handle missing indices, matching Maya's multi-attribute behavior.
+    This dictionary is completely reset upon each execution.
 
   - `OUT`
 
-    出力アトリビュート値を格納する dict です。
-    キーは output[] アトリビュートのインデックスです。
-    list でないのは、アトリビュートと同様に欠番に対応するためです。
+    A dictionary storing output attribute values.
+    The keys are the indices of the `output[]` multi-attribute.
+    It is a dictionary rather than a list to handle missing indices.
+    This dictionary is cleared upon each execution.
+    Setting a value to a key writes the value to that output index if the attribute connection exists.
 
-    実行されるたびにこの dict はクリアされます。
-    これに値をセットすると、実際にそのインデックスのアトリビュートが存在すれば出力されます。
 
+* <a name="rawmode"> How Code is Saved and How to Utilize `IN` and `OUT`
 
-* <a name="rawmode"> コードの保存の仕組みと `IN` と `OUT` の活用方法
+  Code is saved in a string attribute named `code` on the `exprespy` node.
+  Attribute references within the code are replaced with special variables: `IN[index]` or `OUT[index]`.
+  The actual attributes are connected to their corresponding `input[index]` and `output[index]` multi-attributes.
 
-  コードは exprespy ノードの code という string アトリビュートに保存されます。
-  コード内のアトリビュート参照は `IN[index]` や `OUT[index]` の特殊変数参照に置き換わります。
-  実際のアトリビュートは、それらに対応した `input[index]` と `output[index]` に接続されます。
+  The code visible in the Attribute Editor is a temporary representation where `IN` and `OUT` are replaced with user-friendly names.
+  This replacement process is handled by the `exprespy` Python module.
 
-  アトリビュートエディタ上に見えているコードは `IN` や `OUT` を置き換えた仮のコードです。
-  この処理は exprespy の Python モジュールが行っています。
+  Normally you do not need to worry about these variables. However, if you understand this specification, you can directly edit connections via the Node Editor or scripts, and explicitly write `IN` or `OUT` with indices in the editor code.
+  This is convenient for looping through a large number of inputs and outputs (by coding keys as variables like `IN[i]`, you prevent the editor from converting them back into fixed attribute names).
+  It also allows linking `exprespy` nodes together, which is impossible with native expressions.
 
-  通常はこれらの変数の存在を意識する必要はありませんが、
-  この仕様を理解していれば、ノードエディタやスクリプト等でコネクションを直接編集し、
-  エディタ上のコードに `IN` や `OUT` とインデックスを直接コーディングしても構いません。
-  大量の入出力をループ処理する場合などに便利です（
-  `IN[i]` のようにキーを変数でコーディングしているものはエディタ上でアトリビュート名にされてしまうことが回避されます）。
-  また、標準エクスプレッション機能では不可能な exprespy ノード同士を連結することも出来るでしょう
+  Enabling **Raw Mode** in the Attribute Editor disables all name substitutions for `IN` and `OUT` as well as automatic connection/disconnection management, allowing for more technical editing.
+  You can start with automatic connections to easily draft the code, and switch modes once inputs and outputs are finalized.
 
-  アトリビュートエディタ上にある **Raw Mode** を ON にすると、
-  `IN` と `OUT` の名前置換と自動接続・切断処理が一切行われなくなりますので、
-  よりテクニカルな編集が出来ます。
-  最初は自動接続に任せて軽くコーディングして入出力がフィックスした後にモードを切り替えても良いでしょう。
-
-  接続・切断処理をエディタの自動処理に任せる場合は、
-  `input` や `output` の要素の削除処理や場合によっての維持も自動的に行われます。
-  自分で接続処理する場合は多少の意識が必要です。
-  まず `output` の各要素は接続が切断されると自動消滅するようになっています。
-  一方で `input` の各要素は接続が切断されても自動消滅しません。
-  これは Maya の複雑な問題回避（接続によってはUndoした場合に状態が戻らないことがあるなど）
-  の意図もありますが、 **接続の無い値だけの要素も利用可能にする** 意図もあります。
-  例えば、何かを接続してから切断する、または直接 `setAttr` するなどして値を設定した場合も
-  入力として通常通り扱うことが出来ます。
+  When relying on the editor's automatic management for connections and disconnections, the deletion and retention of `input` and `output` multi-elements are handled automatically.
+  If you manage connections yourself, you should keep a few things in mind.
+  First, individual elements of the `output` multi-attribute automatically delete themselves when disconnected.
+  On the other hand, elements of the `input` multi-attribute do not delete themselves automatically upon disconnection.
+  This design circumvents some complex Maya issues (e.g., undoing certain connection states not reverting properly) and also **allows you to use unconnected elements with manually set values**.
+  For example, if you connect an attribute, disconnect it, or directly set its value via `setAttr`, the value is still readable as an input as usual.
 
   ![ui_inputs](images/ui_inputs.png)
 
-  `input` の要素を削除するには、アトリビュートエディタの Inputs フレーム内の GUI が便利です。
-  上流のコネクションを意味するボタンがグレーアウトしているかどうかで入力の有無を判別できます。
-  要素を削除するにはゴミ箱ボタンをクリックします。
+  To delete `input` elements, use the GUI inside the "Inputs" frame of the Attribute Editor.
+  You can tell whether there is an active input connection by checking if the upstream connection button is grayed out. Click the trash icon to delete an element.
 
 
 
-## <a name="limitation"> 制限事項
-* Python である以上は避けられない宿命ですが、
-  2016 以降の Maya の Parallel モードであっても
-  Python を実行するノード（exprespy ノード、MASH_Python 等の他のノード、または Python で実装されたプラグインノード）
-  同士は決して並列実行されません。
-  これは [GIL](https://en.wikipedia.org/wiki/Global_interpreter_lock) の仕組みによるものです。
+## <a name="limitation"> Limitations
+* As is inevitable with Python, even in Maya's Parallel Evaluation mode introduced in 2016, nodes executing Python (such as `exprespy` nodes, `MASH_Python` nodes, or Python-implemented plugin nodes) are never executed in parallel with each other.
+  This is due to Python's [GIL (Global Interpreter Lock)](https://en.wikipedia.org/wiki/Global_interpreter_lock).
 
-  2015 以前の Maya であれば exprespy は非常に価値のあるプラグインだと思いますが、2016 以降での価値は少し下がります。
-  Python に関係の無い他のノードとは並列化されますし、その点では
-  [標準の expression ノードと同じ](http://download.autodesk.com/us/company/files/2017/UsingParallelMaya.pdf)
-  です。
-  また、標準 expression や Python の仕組み以外にも並列化を妨げる多くの伝統的な機能を Maya 自身が持っているため、
-  実際のプロダクションデータにおいて並列化がスムースにはいきにくいのが現状です。
-  そんな現状においては exprespy は便利な機能に違いありませんが、並列化という大きな方向性には逆らうソリューションであることは否定出来ません。
+  While `exprespy` was incredibly valuable in Maya 2015 and earlier, its comparative benefit is slightly lower starting with 2016. However, it still runs in parallel with other non-Python nodes, which behaves [the same as native expression nodes](http://download.autodesk.com/us/company/files/2017/UsingParallelMaya.pdf).
+  Furthermore, since Maya itself contains many legacy features besides native expressions and Python that block parallelization, achieving smooth parallel evaluation in real-world production scenes is often difficult anyway.
+  In such environments, `exprespy` remains a highly convenient tool, though it is admittedly a solution that runs contrary to the overall direction of parallelization.
 
-  とはいえ、標準 expression を使ったり、Python プラグインノードを作るくらいなら、exprespy は価値があるものと考えられます。
-  また、ノード開発やリギングのプロトタイピングにも非常に有効だと考えます。
+  Nevertheless, `exprespy` is highly valuable compared to writing native expressions or creating custom Python plugin nodes. It is also extremely effective for node development and rigging prototyping.
 
-* コード内には日本語などの非ASCII文字は出来るだけ含めないことを推奨します。
-  もし、記述する場合は、通常のスクリプトと同様に、最初の行コメントにエンコーディング名を書いてください。
-  日本語Windows では `cp932` 、簡体中国語Windows では `cp936` 、 Linux や Mac では `utf-8` です。
-  これは
-  [Mayaの仕様](https://knowledge.autodesk.com/ja/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2015/JPN/Maya/files/Running-Maya-in-Japanese-Prepare-Maya-files-containing-Japanese-text-htm.html)
-  によるものです。
-  そして、残念ながら、プラットフォーム間でのファイルの受け渡しの際には注意が必要です（詳しくはリンク先の記事をお読みください）。
+* It is recommended to avoid non-ASCII characters (like Japanese) in your expression code as much as possible.
+  If you must include them, specify the encoding in a comment on the first line, just as you would in standard Python scripts.
+  This means `cp932` for Japanese Windows, `cp936` for Simplified Chinese Windows, and `utf-8` for Linux and macOS.
+  This constraint is due to [Maya's specifications](https://knowledge.autodesk.com/ja/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2015/JPN/Maya/files/Running-Maya-in-Japanese-Prepare-Maya-files-containing-Japanese-text-htm.html).
+  Unfortunately, care must be taken when transferring files between different platforms (please refer to the linked article for details).
 
-* コード内のアトリビュート参照が識別されてコネクション化される仕組みは、正規表現を使ったとても簡易的な実装です。
-  - コメントや文字列リテラルを特に識別していないため、
-    その中に実際のアトリビュートにマッチする名前があるとコネクションに置き換えられてしまいます。
-  - 出力としての左辺の認識は `=` での代入で判別しています。
-    `+=` や `-=` などは判別されません。
-    左辺をシーケンスとした一括代入も判別されません。
-  - もし、識別の挙動がおかしい場合は、諦めて Raw Mode を活用すれば確実です。
+* The parser that identifies attribute references in code and converts them into connections is a very simple implementation based on regular expressions.
+  - It does not distinguish comments or string literals; if a substring matching an active attribute name is present within them, it will still be replaced with a connection.
+  - Outputs on the left-hand side are recognized solely by `=` assignment. Compound assignments like `+=` or `-=` are not recognized.
+    Unpacking assignments with sequences on the left-hand side are also not supported.
+  - If the parser behaves unexpectedly, you can always switch to **Raw Mode** for precise control.
 
-* MObject の入出力は少し非効率的な実装になっています（MDataBlock ではなくMPlug を経由しています）。
-  MObject を C++ と Python の間で受け渡す良い方法が他に無いからです。
+* Inputting and outputting `MObject` values has a slightly inefficient implementation (routing through `MPlug` rather than `MDataBlock`).
+  This is because there is no other good way to pass `MObject` references between C++ and Python.
 
-* Maya のクォータニオンのアトリビュート型は統一されておらず、double4 の場合と、一般的な compound の場合の2通りがあります。たとえば、decomposeMatrix ノードの outputQuat や transform ノードの rotateQuaternion アトリビュートは double4 型ですが、quaternionNodes プラグインの提供する様々なノードのクォータニオンは一般 compound 型です。とはいえ、異なる型のアトリビュート同士を接続しても問題なく値をやりとりできます。
+* Maya's quaternion attribute types are not uniform: some are `double4` and others are general compound attributes. For example, `outputQuat` on a `decomposeMatrix` node or `rotateQuaternion` on a `transform` node is `double4`, whereas quaternions on various nodes provided by the `quaternionNodes` plugin are general compound attributes. Fortunately, you can still connect different types of quaternion attributes to exchange values without issues.
 
-  しかし exprespy の generic 型アトリビュートでは問題があります。exprespy では double4 型を問題なく入出力できますが、compound 型の quaternion 値を入力することはできません。出力は問題ありません（exprespy としては double4 データを出力しているだけですが、compound 型は問題なく受け取れるようです）。
+  However, this causes an issue with `exprespy`'s generic attributes. While `exprespy` can input and output `double4` types without problems, it cannot input compound-type quaternion values. Outputting them works fine (as `exprespy` simply outputs `double4` data, which compound attributes can receive).
 
-  一般 compound 型 quaternion 値を入力したい場合は x, y, z, w 要素を個別に接続することで対応してください。
+  To input general compound-type quaternion values, please connect the individual x, y, z, and w elements separately.
 
 
 
-## 改訂履歴
+## Revision History
 * 2022.07.02: exprespy 3.0.1.20220627
-  - double4 型データ出力が実装ミスにより動作していなかったのを修正。
+  - Fixed a bug where double4 data output did not work due to an implementation oversight.
 
 * 2022.04.29: exprespy 3.0.0.20220429
-  - エディタ上にアトリビュートのショート名が正しく表示されない場合がある不具合を修正（利用していたlsコマンドのバグと思われる）。
+  - Fixed an issue where short attribute names were sometimes not displayed correctly in the editor (likely due to a bug in the native `ls` command).
 
 * 2021.04.11: exprespy 3.0.0
-  - Python 3 に対応。
-  - unicode 文字列を string アトリビュートに出力する処理を改善（コードで指定されたエンコードタイプに依存せず unicode のまま処理）。
-  - サンプルシーン [noiseDeformer.ma](examples/noiseDeformer.ma) を Python 3 でも動くように修正。
+  - Added support for Python 3.
+  - Improved handling of outputting unicode strings to string attributes (processes unicode as-is without depending on the encoding type specified in the code).
+  - Updated the [noiseDeformer.ma](examples/noiseDeformer.ma) sample scene to work in Python 3.
 
 * 2018.08.28: exprespy 2.0.2
-  - Parallel の効率が少しでも良くなるように、スケジューリングタイプを GloballySerial に設定。
+  - Configured the scheduling type to `GloballySerial` to slightly improve Parallel Evaluation efficiency.
 
 * 2017.08.20: exprespy 2.0.1
-  - スクリプト編集時に入力コネクションがおかしくなることがあるバグを修正。
+  - Fixed a bug where input connections could behave unexpectedly during script editing.
 
 * 2016.11.06: exprespy 2.0.0
-  - シェイプデータ等あらゆる型の入出力に対応。
-  - あらゆる数値コンパウンド型の取り扱いを python list としてサポート。
-  - エディタの機能強化（標準スクリプトエディタと同じコントロールを導入）。
-  - エディタのサイズを調整可能に。
-  - Raw Mode を追加。
-  - Short Name モードを追加。
-  - 特殊変数 COUNT を追加。
-  - アトリビュート自動接続切断処理の改善（接続の無い値の維持、一度決まったインデックスの維持など）
-  - デフォルトでインポートされるモジュールを追加。
-  - コード中に書いた関数が正常に動作しない問題を修正（グローバル変数にアクセス出来なかった）。
-  - コード中のprint文やエラーメッセージのスタックトレースの行の順番が逆転することがある問題を修正。
-  - サンプルシーンに [bend_roll.ma](examples/bend_roll.ma) を追加。
-  - サンプルシーンに [bezierCurve.ma](examples/bezierCurve.ma) を追加。
-  - サンプルシーンに [closestPoints.ma](examples/closestPoints.ma) を追加。
-  - サンプルシーンに [closestPoints.ma](examples/closestPoints2016.ma) を追加。
-  - サンプルシーンに [epcurve.ma](examples/epcurve.ma) を追加。
-  - サンプルシーンに [noiseDeformer.ma](examples/noiseDeformer.ma) を追加。
+  - Supported input and output of any data types, including shape data.
+  - Added support for handling all numeric compound types as Python lists.
+  - Enhanced editor capabilities (introduced the same controls as Maya's native Script Editor).
+  - Made the editor size adjustable.
+  - Added Raw Mode.
+  - Added Short Name mode.
+  - Added the special variable `COUNT`.
+  - Improved automatic attribute connection and disconnection (retaining values for disconnected elements, preserving established indices, etc.).
+  - Added default imported modules.
+  - Fixed an issue where functions defined inside the code did not work correctly (due to inability to access the global scope).
+  - Fixed an issue where print statements and error stack trace line orders in the code were sometimes inverted.
+  - Added the [bend_roll.ma](examples/bend_roll.ma) sample scene.
+  - Added the [bezierCurve.ma](examples/bezierCurve.ma) sample scene.
+  - Added the [closestPoints.ma](examples/closestPoints.ma) sample scene.
+  - Added the [closestPoints2016.ma](examples/closestPoints2016.ma) sample scene.
+  - Added the [epcurve.ma](examples/epcurve.ma) sample scene.
+  - Added the [noiseDeformer.ma](examples/noiseDeformer.ma) sample scene.
 
 * 2016.10.22:
-  - ネームスペースやパス区切りの含まれるノード名を識別出来ていなかったバグを修正。
+  - Fixed a bug where node names containing namespaces or path separators were not correctly identified.
 
 * 2016.10.18:
-  - コード中に同じアトリビュート参照が複数存在した場合に間違ったコネクションが作られることがあったバグを修正。
+  - Fixed a bug where incorrect connections could be made when the same attribute reference appeared multiple times in the code.
 
 * 2016.10.06:
-  - アトリビュートエディタを改善。識別していないコネクションが維持されるようにした。
-  - [viewTemplates](viewTemplates) 追加。ノードエディタで扱いやすくなる。
-  - プラグインを更新。compiled アトリビュートを hidden にした。
-  - サンプルシーンに [ripple.ma](examples/ripple.ma) 追加。
+  - Improved the Attribute Editor to retain unidentified connections.
+  - Added [viewTemplates](viewTemplates) to make the node easier to handle in the Node Editor.
+  - Updated the plugin, changing the `compiled` attribute to hidden.
+  - Added the [ripple.ma](examples/ripple.ma) sample scene.
 
-* 2016.10.2: 初版
+* 2016.10.02: Initial release.
